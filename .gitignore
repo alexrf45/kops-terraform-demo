@@ -1,3 +1,5 @@
+/live/cluster/data/*
+
 # Local .terraform directories
 **/.terraform/*
 

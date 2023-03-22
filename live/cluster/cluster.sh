@@ -21,6 +21,7 @@ kops create cluster \
 	--node-size=$NODE_SIZE \
 	--node-count $NODE_COUNT \
 	--networking $NETWORKING \
+	--ssh-public-key="~/.ssh/homeadm.pub" \
 	--bastion="true" \
 	--topology private \
 	--discovery-store=$DISCOVERY_STORE
