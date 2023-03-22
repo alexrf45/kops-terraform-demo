@@ -18,29 +18,6 @@ resource "aws_iam_group" "kops" {
   path = "/kops/iam/"
 }
 
-#resource "aws_iam_policy_document" "kops-policy-doc" {
-# statement {
-#   actions   = ["ec2:*", "sqs:*", "iam:*", ]
-#   resources = ["*"]
-#   effect    = "Allow"
-# }
-# statement {
-#   actions   = ["s3:ListObjectsInBucket", "s3:*Object"]
-#   resources = ["*"]
-#   effect    = "Allow"
-# }
-
-
-#}
-
-#resource "aws_iam_policy" "kops-policy" {
-# policy = data.aws_iam_policy_document.kops-policy-doc.json
-#}
-
-#resource "aws_iam_group_policy_attachment" "kops-grp" {
-# group      = aws_iam_group.kops.name
-# policy_arn = aws_iam_policy.kops-policy.arn
-#}
 
 data "aws_iam_policy" "ec2_full_access" {
   arn = "arn:aws:iam::aws:policy/AmazonEC2FullAccess"
@@ -52,6 +29,10 @@ data "aws_iam_policy" "route53fullaccess" {
 
 data "aws_iam_policy" "s3fullaccess" {
   arn = "arn:aws:iam::aws:policy/AmazonS3FullAccess"
+}
+
+data "aws_iam_policy" "dynamodbfullaccess" {
+  arn = "arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess"
 }
 
 data "aws_iam_policy" "iamfullaccess" {
@@ -85,6 +66,11 @@ resource "aws_iam_group_policy_attachment" "kops-s3" {
   policy_arn = data.aws_iam_policy.s3fullaccess.arn
 }
 
+resource "aws_iam_group_policy_attachment" "kops-dynamodb" {
+  group      = aws_iam_group.kops.name
+  policy_arn = data.aws_iam_policy.dynamodbfullaccess.arn
+}
+
 resource "aws_iam_group_policy_attachment" "kops-iam" {
   group      = aws_iam_group.kops.name
   policy_arn = data.aws_iam_policy.iamfullaccess.arn
@@ -106,6 +92,10 @@ resource "aws_iam_group_policy_attachment" "kops-event-bridge" {
 }
 
 #create the kops user
+
+#TODO - Create virtual mfa to assign to user.
+
+
 
 resource "aws_iam_user" "kops_user" {
   name = "kops"
