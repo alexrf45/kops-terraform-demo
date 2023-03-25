@@ -7,7 +7,6 @@ terraform {
     key            = "cloud-fam/terraform.tfstate"
 
   }
-
 }
 
 locals {
@@ -24,7 +23,7 @@ locals {
   kube-system-dns-controller_role_name               = aws_iam_role.dns-controller-kube-system-sa-cloud-fam-com.name
   kube-system-ebs-csi-controller-sa_role_arn         = aws_iam_role.ebs-csi-controller-sa-kube-system-sa-cloud-fam-com.arn
   kube-system-ebs-csi-controller-sa_role_name        = aws_iam_role.ebs-csi-controller-sa-kube-system-sa-cloud-fam-com.name
-  master_autoscaling_group_ids                       = [aws_autoscaling_group.control-plane-us-east-1a-masters-cloud-fam-com.id, aws_autoscaling_group.control-plane-us-east-1b-masters-cloud-fam-com.id, aws_autoscaling_group.control-plane-us-east-1c-masters-cloud-fam-com.id]
+  master_autoscaling_group_ids                       = [aws_autoscaling_group.control-plane-us-east-1a-1-masters-cloud-fam-com.id, aws_autoscaling_group.control-plane-us-east-1a-2-masters-cloud-fam-com.id, aws_autoscaling_group.control-plane-us-east-1b-1-masters-cloud-fam-com.id, aws_autoscaling_group.control-plane-us-east-1b-2-masters-cloud-fam-com.id, aws_autoscaling_group.control-plane-us-east-1c-1-masters-cloud-fam-com.id]
   master_security_group_ids                          = [aws_security_group.masters-cloud-fam-com.id]
   masters_role_arn                                   = aws_iam_role.masters-cloud-fam-com.arn
   masters_role_name                                  = aws_iam_role.masters-cloud-fam-com.name
@@ -103,7 +102,7 @@ output "kube-system-ebs-csi-controller-sa_role_name" {
 }
 
 output "master_autoscaling_group_ids" {
-  value = [aws_autoscaling_group.control-plane-us-east-1a-masters-cloud-fam-com.id, aws_autoscaling_group.control-plane-us-east-1b-masters-cloud-fam-com.id, aws_autoscaling_group.control-plane-us-east-1c-masters-cloud-fam-com.id]
+  value = [aws_autoscaling_group.control-plane-us-east-1a-1-masters-cloud-fam-com.id, aws_autoscaling_group.control-plane-us-east-1a-2-masters-cloud-fam-com.id, aws_autoscaling_group.control-plane-us-east-1b-1-masters-cloud-fam-com.id, aws_autoscaling_group.control-plane-us-east-1b-2-masters-cloud-fam-com.id, aws_autoscaling_group.control-plane-us-east-1c-1-masters-cloud-fam-com.id]
 }
 
 output "master_security_group_ids" {
@@ -220,6 +219,11 @@ resource "aws_autoscaling_group" "bastions-cloud-fam-com" {
   name                  = "bastions.cloud-fam.com"
   protect_from_scale_in = false
   tag {
+    key                 = "Enviornment"
+    propagate_at_launch = true
+    value               = "terraform"
+  }
+  tag {
     key                 = "KubernetesCluster"
     propagate_at_launch = true
     value               = "cloud-fam.com"
@@ -228,6 +232,11 @@ resource "aws_autoscaling_group" "bastions-cloud-fam-com" {
     key                 = "Name"
     propagate_at_launch = true
     value               = "bastions.cloud-fam.com"
+  }
+  tag {
+    key                 = "Owner"
+    propagate_at_launch = true
+    value               = "r0land"
   }
   tag {
     key                 = "k8s.io/cluster-autoscaler/node-template/label/node-role.kubernetes.io/node"
@@ -253,18 +262,23 @@ resource "aws_autoscaling_group" "bastions-cloud-fam-com" {
   vpc_zone_identifier = [aws_subnet.us-east-1a-cloud-fam-com.id, aws_subnet.us-east-1b-cloud-fam-com.id, aws_subnet.us-east-1c-cloud-fam-com.id]
 }
 
-resource "aws_autoscaling_group" "control-plane-us-east-1a-masters-cloud-fam-com" {
+resource "aws_autoscaling_group" "control-plane-us-east-1a-1-masters-cloud-fam-com" {
   enabled_metrics = ["GroupDesiredCapacity", "GroupInServiceInstances", "GroupMaxSize", "GroupMinSize", "GroupPendingInstances", "GroupStandbyInstances", "GroupTerminatingInstances", "GroupTotalInstances"]
   launch_template {
-    id      = aws_launch_template.control-plane-us-east-1a-masters-cloud-fam-com.id
-    version = aws_launch_template.control-plane-us-east-1a-masters-cloud-fam-com.latest_version
+    id      = aws_launch_template.control-plane-us-east-1a-1-masters-cloud-fam-com.id
+    version = aws_launch_template.control-plane-us-east-1a-1-masters-cloud-fam-com.latest_version
   }
   max_instance_lifetime = 0
   max_size              = 1
   metrics_granularity   = "1Minute"
   min_size              = 1
-  name                  = "control-plane-us-east-1a.masters.cloud-fam.com"
+  name                  = "control-plane-us-east-1a-1.masters.cloud-fam.com"
   protect_from_scale_in = false
+  tag {
+    key                 = "Enviornment"
+    propagate_at_launch = true
+    value               = "terraform"
+  }
   tag {
     key                 = "KubernetesCluster"
     propagate_at_launch = true
@@ -273,7 +287,12 @@ resource "aws_autoscaling_group" "control-plane-us-east-1a-masters-cloud-fam-com
   tag {
     key                 = "Name"
     propagate_at_launch = true
-    value               = "control-plane-us-east-1a.masters.cloud-fam.com"
+    value               = "control-plane-us-east-1a-1.masters.cloud-fam.com"
+  }
+  tag {
+    key                 = "Owner"
+    propagate_at_launch = true
+    value               = "r0land"
   }
   tag {
     key                 = "k8s.io/cluster-autoscaler/node-template/label/kops.k8s.io/kops-controller-pki"
@@ -303,7 +322,7 @@ resource "aws_autoscaling_group" "control-plane-us-east-1a-masters-cloud-fam-com
   tag {
     key                 = "kops.k8s.io/instancegroup"
     propagate_at_launch = true
-    value               = "control-plane-us-east-1a"
+    value               = "control-plane-us-east-1a-1"
   }
   tag {
     key                 = "kubernetes.io/cluster/cloud-fam.com"
@@ -314,18 +333,23 @@ resource "aws_autoscaling_group" "control-plane-us-east-1a-masters-cloud-fam-com
   vpc_zone_identifier = [aws_subnet.us-east-1a-cloud-fam-com.id]
 }
 
-resource "aws_autoscaling_group" "control-plane-us-east-1b-masters-cloud-fam-com" {
+resource "aws_autoscaling_group" "control-plane-us-east-1a-2-masters-cloud-fam-com" {
   enabled_metrics = ["GroupDesiredCapacity", "GroupInServiceInstances", "GroupMaxSize", "GroupMinSize", "GroupPendingInstances", "GroupStandbyInstances", "GroupTerminatingInstances", "GroupTotalInstances"]
   launch_template {
-    id      = aws_launch_template.control-plane-us-east-1b-masters-cloud-fam-com.id
-    version = aws_launch_template.control-plane-us-east-1b-masters-cloud-fam-com.latest_version
+    id      = aws_launch_template.control-plane-us-east-1a-2-masters-cloud-fam-com.id
+    version = aws_launch_template.control-plane-us-east-1a-2-masters-cloud-fam-com.latest_version
   }
   max_instance_lifetime = 0
   max_size              = 1
   metrics_granularity   = "1Minute"
   min_size              = 1
-  name                  = "control-plane-us-east-1b.masters.cloud-fam.com"
+  name                  = "control-plane-us-east-1a-2.masters.cloud-fam.com"
   protect_from_scale_in = false
+  tag {
+    key                 = "Enviornment"
+    propagate_at_launch = true
+    value               = "terraform"
+  }
   tag {
     key                 = "KubernetesCluster"
     propagate_at_launch = true
@@ -334,7 +358,12 @@ resource "aws_autoscaling_group" "control-plane-us-east-1b-masters-cloud-fam-com
   tag {
     key                 = "Name"
     propagate_at_launch = true
-    value               = "control-plane-us-east-1b.masters.cloud-fam.com"
+    value               = "control-plane-us-east-1a-2.masters.cloud-fam.com"
+  }
+  tag {
+    key                 = "Owner"
+    propagate_at_launch = true
+    value               = "r0land"
   }
   tag {
     key                 = "k8s.io/cluster-autoscaler/node-template/label/kops.k8s.io/kops-controller-pki"
@@ -364,7 +393,78 @@ resource "aws_autoscaling_group" "control-plane-us-east-1b-masters-cloud-fam-com
   tag {
     key                 = "kops.k8s.io/instancegroup"
     propagate_at_launch = true
-    value               = "control-plane-us-east-1b"
+    value               = "control-plane-us-east-1a-2"
+  }
+  tag {
+    key                 = "kubernetes.io/cluster/cloud-fam.com"
+    propagate_at_launch = true
+    value               = "owned"
+  }
+  target_group_arns   = [aws_lb_target_group.tcp-cloud-fam-com-qk3bcf.id]
+  vpc_zone_identifier = [aws_subnet.us-east-1a-cloud-fam-com.id]
+}
+
+resource "aws_autoscaling_group" "control-plane-us-east-1b-1-masters-cloud-fam-com" {
+  enabled_metrics = ["GroupDesiredCapacity", "GroupInServiceInstances", "GroupMaxSize", "GroupMinSize", "GroupPendingInstances", "GroupStandbyInstances", "GroupTerminatingInstances", "GroupTotalInstances"]
+  launch_template {
+    id      = aws_launch_template.control-plane-us-east-1b-1-masters-cloud-fam-com.id
+    version = aws_launch_template.control-plane-us-east-1b-1-masters-cloud-fam-com.latest_version
+  }
+  max_instance_lifetime = 0
+  max_size              = 1
+  metrics_granularity   = "1Minute"
+  min_size              = 1
+  name                  = "control-plane-us-east-1b-1.masters.cloud-fam.com"
+  protect_from_scale_in = false
+  tag {
+    key                 = "Enviornment"
+    propagate_at_launch = true
+    value               = "terraform"
+  }
+  tag {
+    key                 = "KubernetesCluster"
+    propagate_at_launch = true
+    value               = "cloud-fam.com"
+  }
+  tag {
+    key                 = "Name"
+    propagate_at_launch = true
+    value               = "control-plane-us-east-1b-1.masters.cloud-fam.com"
+  }
+  tag {
+    key                 = "Owner"
+    propagate_at_launch = true
+    value               = "r0land"
+  }
+  tag {
+    key                 = "k8s.io/cluster-autoscaler/node-template/label/kops.k8s.io/kops-controller-pki"
+    propagate_at_launch = true
+    value               = ""
+  }
+  tag {
+    key                 = "k8s.io/cluster-autoscaler/node-template/label/node-role.kubernetes.io/control-plane"
+    propagate_at_launch = true
+    value               = ""
+  }
+  tag {
+    key                 = "k8s.io/cluster-autoscaler/node-template/label/node.kubernetes.io/exclude-from-external-load-balancers"
+    propagate_at_launch = true
+    value               = ""
+  }
+  tag {
+    key                 = "k8s.io/role/control-plane"
+    propagate_at_launch = true
+    value               = "1"
+  }
+  tag {
+    key                 = "k8s.io/role/master"
+    propagate_at_launch = true
+    value               = "1"
+  }
+  tag {
+    key                 = "kops.k8s.io/instancegroup"
+    propagate_at_launch = true
+    value               = "control-plane-us-east-1b-1"
   }
   tag {
     key                 = "kubernetes.io/cluster/cloud-fam.com"
@@ -375,18 +475,23 @@ resource "aws_autoscaling_group" "control-plane-us-east-1b-masters-cloud-fam-com
   vpc_zone_identifier = [aws_subnet.us-east-1b-cloud-fam-com.id]
 }
 
-resource "aws_autoscaling_group" "control-plane-us-east-1c-masters-cloud-fam-com" {
+resource "aws_autoscaling_group" "control-plane-us-east-1b-2-masters-cloud-fam-com" {
   enabled_metrics = ["GroupDesiredCapacity", "GroupInServiceInstances", "GroupMaxSize", "GroupMinSize", "GroupPendingInstances", "GroupStandbyInstances", "GroupTerminatingInstances", "GroupTotalInstances"]
   launch_template {
-    id      = aws_launch_template.control-plane-us-east-1c-masters-cloud-fam-com.id
-    version = aws_launch_template.control-plane-us-east-1c-masters-cloud-fam-com.latest_version
+    id      = aws_launch_template.control-plane-us-east-1b-2-masters-cloud-fam-com.id
+    version = aws_launch_template.control-plane-us-east-1b-2-masters-cloud-fam-com.latest_version
   }
   max_instance_lifetime = 0
   max_size              = 1
   metrics_granularity   = "1Minute"
   min_size              = 1
-  name                  = "control-plane-us-east-1c.masters.cloud-fam.com"
+  name                  = "control-plane-us-east-1b-2.masters.cloud-fam.com"
   protect_from_scale_in = false
+  tag {
+    key                 = "Enviornment"
+    propagate_at_launch = true
+    value               = "terraform"
+  }
   tag {
     key                 = "KubernetesCluster"
     propagate_at_launch = true
@@ -395,7 +500,12 @@ resource "aws_autoscaling_group" "control-plane-us-east-1c-masters-cloud-fam-com
   tag {
     key                 = "Name"
     propagate_at_launch = true
-    value               = "control-plane-us-east-1c.masters.cloud-fam.com"
+    value               = "control-plane-us-east-1b-2.masters.cloud-fam.com"
+  }
+  tag {
+    key                 = "Owner"
+    propagate_at_launch = true
+    value               = "r0land"
   }
   tag {
     key                 = "k8s.io/cluster-autoscaler/node-template/label/kops.k8s.io/kops-controller-pki"
@@ -425,7 +535,78 @@ resource "aws_autoscaling_group" "control-plane-us-east-1c-masters-cloud-fam-com
   tag {
     key                 = "kops.k8s.io/instancegroup"
     propagate_at_launch = true
-    value               = "control-plane-us-east-1c"
+    value               = "control-plane-us-east-1b-2"
+  }
+  tag {
+    key                 = "kubernetes.io/cluster/cloud-fam.com"
+    propagate_at_launch = true
+    value               = "owned"
+  }
+  target_group_arns   = [aws_lb_target_group.tcp-cloud-fam-com-qk3bcf.id]
+  vpc_zone_identifier = [aws_subnet.us-east-1b-cloud-fam-com.id]
+}
+
+resource "aws_autoscaling_group" "control-plane-us-east-1c-1-masters-cloud-fam-com" {
+  enabled_metrics = ["GroupDesiredCapacity", "GroupInServiceInstances", "GroupMaxSize", "GroupMinSize", "GroupPendingInstances", "GroupStandbyInstances", "GroupTerminatingInstances", "GroupTotalInstances"]
+  launch_template {
+    id      = aws_launch_template.control-plane-us-east-1c-1-masters-cloud-fam-com.id
+    version = aws_launch_template.control-plane-us-east-1c-1-masters-cloud-fam-com.latest_version
+  }
+  max_instance_lifetime = 0
+  max_size              = 1
+  metrics_granularity   = "1Minute"
+  min_size              = 1
+  name                  = "control-plane-us-east-1c-1.masters.cloud-fam.com"
+  protect_from_scale_in = false
+  tag {
+    key                 = "Enviornment"
+    propagate_at_launch = true
+    value               = "terraform"
+  }
+  tag {
+    key                 = "KubernetesCluster"
+    propagate_at_launch = true
+    value               = "cloud-fam.com"
+  }
+  tag {
+    key                 = "Name"
+    propagate_at_launch = true
+    value               = "control-plane-us-east-1c-1.masters.cloud-fam.com"
+  }
+  tag {
+    key                 = "Owner"
+    propagate_at_launch = true
+    value               = "r0land"
+  }
+  tag {
+    key                 = "k8s.io/cluster-autoscaler/node-template/label/kops.k8s.io/kops-controller-pki"
+    propagate_at_launch = true
+    value               = ""
+  }
+  tag {
+    key                 = "k8s.io/cluster-autoscaler/node-template/label/node-role.kubernetes.io/control-plane"
+    propagate_at_launch = true
+    value               = ""
+  }
+  tag {
+    key                 = "k8s.io/cluster-autoscaler/node-template/label/node.kubernetes.io/exclude-from-external-load-balancers"
+    propagate_at_launch = true
+    value               = ""
+  }
+  tag {
+    key                 = "k8s.io/role/control-plane"
+    propagate_at_launch = true
+    value               = "1"
+  }
+  tag {
+    key                 = "k8s.io/role/master"
+    propagate_at_launch = true
+    value               = "1"
+  }
+  tag {
+    key                 = "kops.k8s.io/instancegroup"
+    propagate_at_launch = true
+    value               = "control-plane-us-east-1c-1"
   }
   tag {
     key                 = "kubernetes.io/cluster/cloud-fam.com"
@@ -443,11 +624,16 @@ resource "aws_autoscaling_group" "nodes-us-east-1a-cloud-fam-com" {
     version = aws_launch_template.nodes-us-east-1a-cloud-fam-com.latest_version
   }
   max_instance_lifetime = 0
-  max_size              = 1
+  max_size              = 2
   metrics_granularity   = "1Minute"
-  min_size              = 1
+  min_size              = 2
   name                  = "nodes-us-east-1a.cloud-fam.com"
   protect_from_scale_in = false
+  tag {
+    key                 = "Enviornment"
+    propagate_at_launch = true
+    value               = "terraform"
+  }
   tag {
     key                 = "KubernetesCluster"
     propagate_at_launch = true
@@ -457,6 +643,11 @@ resource "aws_autoscaling_group" "nodes-us-east-1a-cloud-fam-com" {
     key                 = "Name"
     propagate_at_launch = true
     value               = "nodes-us-east-1a.cloud-fam.com"
+  }
+  tag {
+    key                 = "Owner"
+    propagate_at_launch = true
+    value               = "r0land"
   }
   tag {
     key                 = "k8s.io/cluster-autoscaler/node-template/label/node-role.kubernetes.io/node"
@@ -488,11 +679,16 @@ resource "aws_autoscaling_group" "nodes-us-east-1b-cloud-fam-com" {
     version = aws_launch_template.nodes-us-east-1b-cloud-fam-com.latest_version
   }
   max_instance_lifetime = 0
-  max_size              = 1
+  max_size              = 2
   metrics_granularity   = "1Minute"
-  min_size              = 1
+  min_size              = 2
   name                  = "nodes-us-east-1b.cloud-fam.com"
   protect_from_scale_in = false
+  tag {
+    key                 = "Enviornment"
+    propagate_at_launch = true
+    value               = "terraform"
+  }
   tag {
     key                 = "KubernetesCluster"
     propagate_at_launch = true
@@ -502,6 +698,11 @@ resource "aws_autoscaling_group" "nodes-us-east-1b-cloud-fam-com" {
     key                 = "Name"
     propagate_at_launch = true
     value               = "nodes-us-east-1b.cloud-fam.com"
+  }
+  tag {
+    key                 = "Owner"
+    propagate_at_launch = true
+    value               = "r0land"
   }
   tag {
     key                 = "k8s.io/cluster-autoscaler/node-template/label/node-role.kubernetes.io/node"
@@ -533,11 +734,16 @@ resource "aws_autoscaling_group" "nodes-us-east-1c-cloud-fam-com" {
     version = aws_launch_template.nodes-us-east-1c-cloud-fam-com.latest_version
   }
   max_instance_lifetime = 0
-  max_size              = 1
+  max_size              = 2
   metrics_granularity   = "1Minute"
-  min_size              = 1
+  min_size              = 2
   name                  = "nodes-us-east-1c.cloud-fam.com"
   protect_from_scale_in = false
+  tag {
+    key                 = "Enviornment"
+    propagate_at_launch = true
+    value               = "terraform"
+  }
   tag {
     key                 = "KubernetesCluster"
     propagate_at_launch = true
@@ -547,6 +753,11 @@ resource "aws_autoscaling_group" "nodes-us-east-1c-cloud-fam-com" {
     key                 = "Name"
     propagate_at_launch = true
     value               = "nodes-us-east-1c.cloud-fam.com"
+  }
+  tag {
+    key                 = "Owner"
+    propagate_at_launch = true
+    value               = "r0land"
   }
   tag {
     key                 = "k8s.io/cluster-autoscaler/node-template/label/node-role.kubernetes.io/node"
@@ -571,15 +782,17 @@ resource "aws_autoscaling_group" "nodes-us-east-1c-cloud-fam-com" {
   vpc_zone_identifier = [aws_subnet.us-east-1c-cloud-fam-com.id]
 }
 
-resource "aws_ebs_volume" "a-etcd-events-cloud-fam-com" {
+resource "aws_ebs_volume" "a-1-etcd-events-cloud-fam-com" {
   availability_zone = "us-east-1a"
   encrypted         = true
   iops              = 3000
   size              = 20
   tags = {
+    "Enviornment"                         = "terraform"
     "KubernetesCluster"                   = "cloud-fam.com"
-    "Name"                                = "a.etcd-events.cloud-fam.com"
-    "k8s.io/etcd/events"                  = "a/a,b,c"
+    "Name"                                = "a-1.etcd-events.cloud-fam.com"
+    "Owner"                               = "r0land"
+    "k8s.io/etcd/events"                  = "a-1/a-1,a-2,b-1,b-2,c-1"
     "k8s.io/role/control-plane"           = "1"
     "k8s.io/role/master"                  = "1"
     "kubernetes.io/cluster/cloud-fam.com" = "owned"
@@ -588,15 +801,17 @@ resource "aws_ebs_volume" "a-etcd-events-cloud-fam-com" {
   type       = "gp3"
 }
 
-resource "aws_ebs_volume" "a-etcd-main-cloud-fam-com" {
+resource "aws_ebs_volume" "a-1-etcd-main-cloud-fam-com" {
   availability_zone = "us-east-1a"
   encrypted         = true
   iops              = 3000
   size              = 20
   tags = {
+    "Enviornment"                         = "terraform"
     "KubernetesCluster"                   = "cloud-fam.com"
-    "Name"                                = "a.etcd-main.cloud-fam.com"
-    "k8s.io/etcd/main"                    = "a/a,b,c"
+    "Name"                                = "a-1.etcd-main.cloud-fam.com"
+    "Owner"                               = "r0land"
+    "k8s.io/etcd/main"                    = "a-1/a-1,a-2,b-1,b-2,c-1"
     "k8s.io/role/control-plane"           = "1"
     "k8s.io/role/master"                  = "1"
     "kubernetes.io/cluster/cloud-fam.com" = "owned"
@@ -605,15 +820,55 @@ resource "aws_ebs_volume" "a-etcd-main-cloud-fam-com" {
   type       = "gp3"
 }
 
-resource "aws_ebs_volume" "b-etcd-events-cloud-fam-com" {
+resource "aws_ebs_volume" "a-2-etcd-events-cloud-fam-com" {
+  availability_zone = "us-east-1a"
+  encrypted         = true
+  iops              = 3000
+  size              = 20
+  tags = {
+    "Enviornment"                         = "terraform"
+    "KubernetesCluster"                   = "cloud-fam.com"
+    "Name"                                = "a-2.etcd-events.cloud-fam.com"
+    "Owner"                               = "r0land"
+    "k8s.io/etcd/events"                  = "a-2/a-1,a-2,b-1,b-2,c-1"
+    "k8s.io/role/control-plane"           = "1"
+    "k8s.io/role/master"                  = "1"
+    "kubernetes.io/cluster/cloud-fam.com" = "owned"
+  }
+  throughput = 125
+  type       = "gp3"
+}
+
+resource "aws_ebs_volume" "a-2-etcd-main-cloud-fam-com" {
+  availability_zone = "us-east-1a"
+  encrypted         = true
+  iops              = 3000
+  size              = 20
+  tags = {
+    "Enviornment"                         = "terraform"
+    "KubernetesCluster"                   = "cloud-fam.com"
+    "Name"                                = "a-2.etcd-main.cloud-fam.com"
+    "Owner"                               = "r0land"
+    "k8s.io/etcd/main"                    = "a-2/a-1,a-2,b-1,b-2,c-1"
+    "k8s.io/role/control-plane"           = "1"
+    "k8s.io/role/master"                  = "1"
+    "kubernetes.io/cluster/cloud-fam.com" = "owned"
+  }
+  throughput = 125
+  type       = "gp3"
+}
+
+resource "aws_ebs_volume" "b-1-etcd-events-cloud-fam-com" {
   availability_zone = "us-east-1b"
   encrypted         = true
   iops              = 3000
   size              = 20
   tags = {
+    "Enviornment"                         = "terraform"
     "KubernetesCluster"                   = "cloud-fam.com"
-    "Name"                                = "b.etcd-events.cloud-fam.com"
-    "k8s.io/etcd/events"                  = "b/a,b,c"
+    "Name"                                = "b-1.etcd-events.cloud-fam.com"
+    "Owner"                               = "r0land"
+    "k8s.io/etcd/events"                  = "b-1/a-1,a-2,b-1,b-2,c-1"
     "k8s.io/role/control-plane"           = "1"
     "k8s.io/role/master"                  = "1"
     "kubernetes.io/cluster/cloud-fam.com" = "owned"
@@ -622,15 +877,17 @@ resource "aws_ebs_volume" "b-etcd-events-cloud-fam-com" {
   type       = "gp3"
 }
 
-resource "aws_ebs_volume" "b-etcd-main-cloud-fam-com" {
+resource "aws_ebs_volume" "b-1-etcd-main-cloud-fam-com" {
   availability_zone = "us-east-1b"
   encrypted         = true
   iops              = 3000
   size              = 20
   tags = {
+    "Enviornment"                         = "terraform"
     "KubernetesCluster"                   = "cloud-fam.com"
-    "Name"                                = "b.etcd-main.cloud-fam.com"
-    "k8s.io/etcd/main"                    = "b/a,b,c"
+    "Name"                                = "b-1.etcd-main.cloud-fam.com"
+    "Owner"                               = "r0land"
+    "k8s.io/etcd/main"                    = "b-1/a-1,a-2,b-1,b-2,c-1"
     "k8s.io/role/control-plane"           = "1"
     "k8s.io/role/master"                  = "1"
     "kubernetes.io/cluster/cloud-fam.com" = "owned"
@@ -639,15 +896,17 @@ resource "aws_ebs_volume" "b-etcd-main-cloud-fam-com" {
   type       = "gp3"
 }
 
-resource "aws_ebs_volume" "c-etcd-events-cloud-fam-com" {
-  availability_zone = "us-east-1c"
+resource "aws_ebs_volume" "b-2-etcd-events-cloud-fam-com" {
+  availability_zone = "us-east-1b"
   encrypted         = true
   iops              = 3000
   size              = 20
   tags = {
+    "Enviornment"                         = "terraform"
     "KubernetesCluster"                   = "cloud-fam.com"
-    "Name"                                = "c.etcd-events.cloud-fam.com"
-    "k8s.io/etcd/events"                  = "c/a,b,c"
+    "Name"                                = "b-2.etcd-events.cloud-fam.com"
+    "Owner"                               = "r0land"
+    "k8s.io/etcd/events"                  = "b-2/a-1,a-2,b-1,b-2,c-1"
     "k8s.io/role/control-plane"           = "1"
     "k8s.io/role/master"                  = "1"
     "kubernetes.io/cluster/cloud-fam.com" = "owned"
@@ -656,15 +915,55 @@ resource "aws_ebs_volume" "c-etcd-events-cloud-fam-com" {
   type       = "gp3"
 }
 
-resource "aws_ebs_volume" "c-etcd-main-cloud-fam-com" {
+resource "aws_ebs_volume" "b-2-etcd-main-cloud-fam-com" {
+  availability_zone = "us-east-1b"
+  encrypted         = true
+  iops              = 3000
+  size              = 20
+  tags = {
+    "Enviornment"                         = "terraform"
+    "KubernetesCluster"                   = "cloud-fam.com"
+    "Name"                                = "b-2.etcd-main.cloud-fam.com"
+    "Owner"                               = "r0land"
+    "k8s.io/etcd/main"                    = "b-2/a-1,a-2,b-1,b-2,c-1"
+    "k8s.io/role/control-plane"           = "1"
+    "k8s.io/role/master"                  = "1"
+    "kubernetes.io/cluster/cloud-fam.com" = "owned"
+  }
+  throughput = 125
+  type       = "gp3"
+}
+
+resource "aws_ebs_volume" "c-1-etcd-events-cloud-fam-com" {
   availability_zone = "us-east-1c"
   encrypted         = true
   iops              = 3000
   size              = 20
   tags = {
+    "Enviornment"                         = "terraform"
     "KubernetesCluster"                   = "cloud-fam.com"
-    "Name"                                = "c.etcd-main.cloud-fam.com"
-    "k8s.io/etcd/main"                    = "c/a,b,c"
+    "Name"                                = "c-1.etcd-events.cloud-fam.com"
+    "Owner"                               = "r0land"
+    "k8s.io/etcd/events"                  = "c-1/a-1,a-2,b-1,b-2,c-1"
+    "k8s.io/role/control-plane"           = "1"
+    "k8s.io/role/master"                  = "1"
+    "kubernetes.io/cluster/cloud-fam.com" = "owned"
+  }
+  throughput = 125
+  type       = "gp3"
+}
+
+resource "aws_ebs_volume" "c-1-etcd-main-cloud-fam-com" {
+  availability_zone = "us-east-1c"
+  encrypted         = true
+  iops              = 3000
+  size              = 20
+  tags = {
+    "Enviornment"                         = "terraform"
+    "KubernetesCluster"                   = "cloud-fam.com"
+    "Name"                                = "c-1.etcd-main.cloud-fam.com"
+    "Owner"                               = "r0land"
+    "k8s.io/etcd/main"                    = "c-1/a-1,a-2,b-1,b-2,c-1"
     "k8s.io/role/control-plane"           = "1"
     "k8s.io/role/master"                  = "1"
     "kubernetes.io/cluster/cloud-fam.com" = "owned"
@@ -675,8 +974,10 @@ resource "aws_ebs_volume" "c-etcd-main-cloud-fam-com" {
 
 resource "aws_eip" "us-east-1a-cloud-fam-com" {
   tags = {
+    "Enviornment"                         = "terraform"
     "KubernetesCluster"                   = "cloud-fam.com"
     "Name"                                = "us-east-1a.cloud-fam.com"
+    "Owner"                               = "r0land"
     "kubernetes.io/cluster/cloud-fam.com" = "owned"
   }
   vpc = true
@@ -684,8 +985,10 @@ resource "aws_eip" "us-east-1a-cloud-fam-com" {
 
 resource "aws_eip" "us-east-1b-cloud-fam-com" {
   tags = {
+    "Enviornment"                         = "terraform"
     "KubernetesCluster"                   = "cloud-fam.com"
     "Name"                                = "us-east-1b.cloud-fam.com"
+    "Owner"                               = "r0land"
     "kubernetes.io/cluster/cloud-fam.com" = "owned"
   }
   vpc = true
@@ -693,8 +996,10 @@ resource "aws_eip" "us-east-1b-cloud-fam-com" {
 
 resource "aws_eip" "us-east-1c-cloud-fam-com" {
   tags = {
+    "Enviornment"                         = "terraform"
     "KubernetesCluster"                   = "cloud-fam.com"
     "Name"                                = "us-east-1c.cloud-fam.com"
+    "Owner"                               = "r0land"
     "kubernetes.io/cluster/cloud-fam.com" = "owned"
   }
   vpc = true
@@ -704,8 +1009,10 @@ resource "aws_iam_instance_profile" "bastions-cloud-fam-com" {
   name = "bastions.cloud-fam.com"
   role = aws_iam_role.bastions-cloud-fam-com.name
   tags = {
+    "Enviornment"                         = "terraform"
     "KubernetesCluster"                   = "cloud-fam.com"
     "Name"                                = "bastions.cloud-fam.com"
+    "Owner"                               = "r0land"
     "kubernetes.io/cluster/cloud-fam.com" = "owned"
   }
 }
@@ -714,8 +1021,10 @@ resource "aws_iam_instance_profile" "masters-cloud-fam-com" {
   name = "masters.cloud-fam.com"
   role = aws_iam_role.masters-cloud-fam-com.name
   tags = {
+    "Enviornment"                         = "terraform"
     "KubernetesCluster"                   = "cloud-fam.com"
     "Name"                                = "masters.cloud-fam.com"
+    "Owner"                               = "r0land"
     "kubernetes.io/cluster/cloud-fam.com" = "owned"
   }
 }
@@ -724,8 +1033,10 @@ resource "aws_iam_instance_profile" "nodes-cloud-fam-com" {
   name = "nodes.cloud-fam.com"
   role = aws_iam_role.nodes-cloud-fam-com.name
   tags = {
+    "Enviornment"                         = "terraform"
     "KubernetesCluster"                   = "cloud-fam.com"
     "Name"                                = "nodes.cloud-fam.com"
+    "Owner"                               = "r0land"
     "kubernetes.io/cluster/cloud-fam.com" = "owned"
   }
 }
@@ -733,8 +1044,10 @@ resource "aws_iam_instance_profile" "nodes-cloud-fam-com" {
 resource "aws_iam_openid_connect_provider" "cloud-fam-com" {
   client_id_list = ["amazonaws.com"]
   tags = {
+    "Enviornment"                         = "terraform"
     "KubernetesCluster"                   = "cloud-fam.com"
     "Name"                                = "cloud-fam.com"
+    "Owner"                               = "r0land"
     "kubernetes.io/cluster/cloud-fam.com" = "owned"
   }
   thumbprint_list = ["9e99a48a9960b14926bb7f3b02e22da2b0ab7280", "a9d53002e97e00e043244f3d170d6f4c414104fd"]
@@ -745,8 +1058,10 @@ resource "aws_iam_role" "aws-cloud-controller-manager-kube-system-sa-cloud-fam-c
   assume_role_policy = file("${path.module}/data/aws_iam_role_aws-cloud-controller-manager.kube-system.sa.cloud-fam.com_policy")
   name               = "aws-cloud-controller-manager.kube-system.sa.cloud-fam.com"
   tags = {
+    "Enviornment"                           = "terraform"
     "KubernetesCluster"                     = "cloud-fam.com"
     "Name"                                  = "aws-cloud-controller-manager.kube-system.sa.cloud-fam.com"
+    "Owner"                                 = "r0land"
     "kubernetes.io/cluster/cloud-fam.com"   = "owned"
     "service-account.kops.k8s.io/name"      = "aws-cloud-controller-manager"
     "service-account.kops.k8s.io/namespace" = "kube-system"
@@ -757,8 +1072,10 @@ resource "aws_iam_role" "bastions-cloud-fam-com" {
   assume_role_policy = file("${path.module}/data/aws_iam_role_bastions.cloud-fam.com_policy")
   name               = "bastions.cloud-fam.com"
   tags = {
+    "Enviornment"                         = "terraform"
     "KubernetesCluster"                   = "cloud-fam.com"
     "Name"                                = "bastions.cloud-fam.com"
+    "Owner"                               = "r0land"
     "kubernetes.io/cluster/cloud-fam.com" = "owned"
   }
 }
@@ -767,8 +1084,10 @@ resource "aws_iam_role" "dns-controller-kube-system-sa-cloud-fam-com" {
   assume_role_policy = file("${path.module}/data/aws_iam_role_dns-controller.kube-system.sa.cloud-fam.com_policy")
   name               = "dns-controller.kube-system.sa.cloud-fam.com"
   tags = {
+    "Enviornment"                           = "terraform"
     "KubernetesCluster"                     = "cloud-fam.com"
     "Name"                                  = "dns-controller.kube-system.sa.cloud-fam.com"
+    "Owner"                                 = "r0land"
     "kubernetes.io/cluster/cloud-fam.com"   = "owned"
     "service-account.kops.k8s.io/name"      = "dns-controller"
     "service-account.kops.k8s.io/namespace" = "kube-system"
@@ -779,8 +1098,10 @@ resource "aws_iam_role" "ebs-csi-controller-sa-kube-system-sa-cloud-fam-com" {
   assume_role_policy = file("${path.module}/data/aws_iam_role_ebs-csi-controller-sa.kube-system.sa.cloud-fam.com_policy")
   name               = "ebs-csi-controller-sa.kube-system.sa.cloud-fam.com"
   tags = {
+    "Enviornment"                           = "terraform"
     "KubernetesCluster"                     = "cloud-fam.com"
     "Name"                                  = "ebs-csi-controller-sa.kube-system.sa.cloud-fam.com"
+    "Owner"                                 = "r0land"
     "kubernetes.io/cluster/cloud-fam.com"   = "owned"
     "service-account.kops.k8s.io/name"      = "ebs-csi-controller-sa"
     "service-account.kops.k8s.io/namespace" = "kube-system"
@@ -791,8 +1112,10 @@ resource "aws_iam_role" "masters-cloud-fam-com" {
   assume_role_policy = file("${path.module}/data/aws_iam_role_masters.cloud-fam.com_policy")
   name               = "masters.cloud-fam.com"
   tags = {
+    "Enviornment"                         = "terraform"
     "KubernetesCluster"                   = "cloud-fam.com"
     "Name"                                = "masters.cloud-fam.com"
+    "Owner"                               = "r0land"
     "kubernetes.io/cluster/cloud-fam.com" = "owned"
   }
 }
@@ -801,8 +1124,10 @@ resource "aws_iam_role" "nodes-cloud-fam-com" {
   assume_role_policy = file("${path.module}/data/aws_iam_role_nodes.cloud-fam.com_policy")
   name               = "nodes.cloud-fam.com"
   tags = {
+    "Enviornment"                         = "terraform"
     "KubernetesCluster"                   = "cloud-fam.com"
     "Name"                                = "nodes.cloud-fam.com"
+    "Owner"                               = "r0land"
     "kubernetes.io/cluster/cloud-fam.com" = "owned"
   }
 }
@@ -845,11 +1170,25 @@ resource "aws_iam_role_policy" "nodes-cloud-fam-com" {
 
 resource "aws_internet_gateway" "cloud-fam-com" {
   tags = {
+    "Enviornment"                         = "terraform"
     "KubernetesCluster"                   = "cloud-fam.com"
     "Name"                                = "cloud-fam.com"
+    "Owner"                               = "r0land"
     "kubernetes.io/cluster/cloud-fam.com" = "owned"
   }
   vpc_id = aws_vpc.cloud-fam-com.id
+}
+
+resource "aws_key_pair" "kubernetes-cloud-fam-com-bfdd6f403e3a82ffe70a53ab37cac980" {
+  key_name   = "kubernetes.cloud-fam.com-bf:dd:6f:40:3e:3a:82:ff:e7:0a:53:ab:37:ca:c9:80"
+  public_key = file("${path.module}/data/aws_key_pair_kubernetes.cloud-fam.com-bfdd6f403e3a82ffe70a53ab37cac980_public_key")
+  tags = {
+    "Enviornment"                         = "terraform"
+    "KubernetesCluster"                   = "cloud-fam.com"
+    "Name"                                = "cloud-fam.com"
+    "Owner"                               = "r0land"
+    "kubernetes.io/cluster/cloud-fam.com" = "owned"
+  }
 }
 
 resource "aws_launch_template" "bastions-cloud-fam-com" {
@@ -869,6 +1208,7 @@ resource "aws_launch_template" "bastions-cloud-fam-com" {
   }
   image_id      = "ami-0172070f66a8ebe63"
   instance_type = "t3.micro"
+  key_name      = aws_key_pair.kubernetes-cloud-fam-com-bfdd6f403e3a82ffe70a53ab37cac980.id
   lifecycle {
     create_before_destroy = true
   }
@@ -891,8 +1231,10 @@ resource "aws_launch_template" "bastions-cloud-fam-com" {
   tag_specifications {
     resource_type = "instance"
     tags = {
+      "Enviornment"                                                                = "terraform"
       "KubernetesCluster"                                                          = "cloud-fam.com"
       "Name"                                                                       = "bastions.cloud-fam.com"
+      "Owner"                                                                      = "r0land"
       "k8s.io/cluster-autoscaler/node-template/label/node-role.kubernetes.io/node" = ""
       "k8s.io/role/bastion"                                                        = "1"
       "kops.k8s.io/instancegroup"                                                  = "bastions"
@@ -902,8 +1244,10 @@ resource "aws_launch_template" "bastions-cloud-fam-com" {
   tag_specifications {
     resource_type = "volume"
     tags = {
+      "Enviornment"                                                                = "terraform"
       "KubernetesCluster"                                                          = "cloud-fam.com"
       "Name"                                                                       = "bastions.cloud-fam.com"
+      "Owner"                                                                      = "r0land"
       "k8s.io/cluster-autoscaler/node-template/label/node-role.kubernetes.io/node" = ""
       "k8s.io/role/bastion"                                                        = "1"
       "kops.k8s.io/instancegroup"                                                  = "bastions"
@@ -911,8 +1255,10 @@ resource "aws_launch_template" "bastions-cloud-fam-com" {
     }
   }
   tags = {
+    "Enviornment"                                                                = "terraform"
     "KubernetesCluster"                                                          = "cloud-fam.com"
     "Name"                                                                       = "bastions.cloud-fam.com"
+    "Owner"                                                                      = "r0land"
     "k8s.io/cluster-autoscaler/node-template/label/node-role.kubernetes.io/node" = ""
     "k8s.io/role/bastion"                                                        = "1"
     "kops.k8s.io/instancegroup"                                                  = "bastions"
@@ -920,7 +1266,7 @@ resource "aws_launch_template" "bastions-cloud-fam-com" {
   }
 }
 
-resource "aws_launch_template" "control-plane-us-east-1a-masters-cloud-fam-com" {
+resource "aws_launch_template" "control-plane-us-east-1a-1-masters-cloud-fam-com" {
   block_device_mappings {
     device_name = "/dev/sda1"
     ebs {
@@ -928,7 +1274,7 @@ resource "aws_launch_template" "control-plane-us-east-1a-masters-cloud-fam-com" 
       encrypted             = true
       iops                  = 3000
       throughput            = 125
-      volume_size           = 64
+      volume_size           = 50
       volume_type           = "gp3"
     }
   }
@@ -937,6 +1283,7 @@ resource "aws_launch_template" "control-plane-us-east-1a-masters-cloud-fam-com" 
   }
   image_id      = "ami-0172070f66a8ebe63"
   instance_type = "m5.large"
+  key_name      = aws_key_pair.kubernetes-cloud-fam-com-bfdd6f403e3a82ffe70a53ab37cac980.id
   lifecycle {
     create_before_destroy = true
   }
@@ -949,7 +1296,7 @@ resource "aws_launch_template" "control-plane-us-east-1a-masters-cloud-fam-com" 
   monitoring {
     enabled = false
   }
-  name = "control-plane-us-east-1a.masters.cloud-fam.com"
+  name = "control-plane-us-east-1a-1.masters.cloud-fam.com"
   network_interfaces {
     associate_public_ip_address = false
     delete_on_termination       = true
@@ -959,46 +1306,52 @@ resource "aws_launch_template" "control-plane-us-east-1a-masters-cloud-fam-com" 
   tag_specifications {
     resource_type = "instance"
     tags = {
+      "Enviornment"                                                                                           = "terraform"
       "KubernetesCluster"                                                                                     = "cloud-fam.com"
-      "Name"                                                                                                  = "control-plane-us-east-1a.masters.cloud-fam.com"
+      "Name"                                                                                                  = "control-plane-us-east-1a-1.masters.cloud-fam.com"
+      "Owner"                                                                                                 = "r0land"
       "k8s.io/cluster-autoscaler/node-template/label/kops.k8s.io/kops-controller-pki"                         = ""
       "k8s.io/cluster-autoscaler/node-template/label/node-role.kubernetes.io/control-plane"                   = ""
       "k8s.io/cluster-autoscaler/node-template/label/node.kubernetes.io/exclude-from-external-load-balancers" = ""
       "k8s.io/role/control-plane"                                                                             = "1"
       "k8s.io/role/master"                                                                                    = "1"
-      "kops.k8s.io/instancegroup"                                                                             = "control-plane-us-east-1a"
+      "kops.k8s.io/instancegroup"                                                                             = "control-plane-us-east-1a-1"
       "kubernetes.io/cluster/cloud-fam.com"                                                                   = "owned"
     }
   }
   tag_specifications {
     resource_type = "volume"
     tags = {
+      "Enviornment"                                                                                           = "terraform"
       "KubernetesCluster"                                                                                     = "cloud-fam.com"
-      "Name"                                                                                                  = "control-plane-us-east-1a.masters.cloud-fam.com"
+      "Name"                                                                                                  = "control-plane-us-east-1a-1.masters.cloud-fam.com"
+      "Owner"                                                                                                 = "r0land"
       "k8s.io/cluster-autoscaler/node-template/label/kops.k8s.io/kops-controller-pki"                         = ""
       "k8s.io/cluster-autoscaler/node-template/label/node-role.kubernetes.io/control-plane"                   = ""
       "k8s.io/cluster-autoscaler/node-template/label/node.kubernetes.io/exclude-from-external-load-balancers" = ""
       "k8s.io/role/control-plane"                                                                             = "1"
       "k8s.io/role/master"                                                                                    = "1"
-      "kops.k8s.io/instancegroup"                                                                             = "control-plane-us-east-1a"
+      "kops.k8s.io/instancegroup"                                                                             = "control-plane-us-east-1a-1"
       "kubernetes.io/cluster/cloud-fam.com"                                                                   = "owned"
     }
   }
   tags = {
+    "Enviornment"                                                                                           = "terraform"
     "KubernetesCluster"                                                                                     = "cloud-fam.com"
-    "Name"                                                                                                  = "control-plane-us-east-1a.masters.cloud-fam.com"
+    "Name"                                                                                                  = "control-plane-us-east-1a-1.masters.cloud-fam.com"
+    "Owner"                                                                                                 = "r0land"
     "k8s.io/cluster-autoscaler/node-template/label/kops.k8s.io/kops-controller-pki"                         = ""
     "k8s.io/cluster-autoscaler/node-template/label/node-role.kubernetes.io/control-plane"                   = ""
     "k8s.io/cluster-autoscaler/node-template/label/node.kubernetes.io/exclude-from-external-load-balancers" = ""
     "k8s.io/role/control-plane"                                                                             = "1"
     "k8s.io/role/master"                                                                                    = "1"
-    "kops.k8s.io/instancegroup"                                                                             = "control-plane-us-east-1a"
+    "kops.k8s.io/instancegroup"                                                                             = "control-plane-us-east-1a-1"
     "kubernetes.io/cluster/cloud-fam.com"                                                                   = "owned"
   }
-  user_data = filebase64("${path.module}/data/aws_launch_template_control-plane-us-east-1a.masters.cloud-fam.com_user_data")
+  user_data = filebase64("${path.module}/data/aws_launch_template_control-plane-us-east-1a-1.masters.cloud-fam.com_user_data")
 }
 
-resource "aws_launch_template" "control-plane-us-east-1b-masters-cloud-fam-com" {
+resource "aws_launch_template" "control-plane-us-east-1a-2-masters-cloud-fam-com" {
   block_device_mappings {
     device_name = "/dev/sda1"
     ebs {
@@ -1006,7 +1359,7 @@ resource "aws_launch_template" "control-plane-us-east-1b-masters-cloud-fam-com" 
       encrypted             = true
       iops                  = 3000
       throughput            = 125
-      volume_size           = 64
+      volume_size           = 50
       volume_type           = "gp3"
     }
   }
@@ -1015,6 +1368,7 @@ resource "aws_launch_template" "control-plane-us-east-1b-masters-cloud-fam-com" 
   }
   image_id      = "ami-0172070f66a8ebe63"
   instance_type = "m5.large"
+  key_name      = aws_key_pair.kubernetes-cloud-fam-com-bfdd6f403e3a82ffe70a53ab37cac980.id
   lifecycle {
     create_before_destroy = true
   }
@@ -1027,7 +1381,7 @@ resource "aws_launch_template" "control-plane-us-east-1b-masters-cloud-fam-com" 
   monitoring {
     enabled = false
   }
-  name = "control-plane-us-east-1b.masters.cloud-fam.com"
+  name = "control-plane-us-east-1a-2.masters.cloud-fam.com"
   network_interfaces {
     associate_public_ip_address = false
     delete_on_termination       = true
@@ -1037,46 +1391,52 @@ resource "aws_launch_template" "control-plane-us-east-1b-masters-cloud-fam-com" 
   tag_specifications {
     resource_type = "instance"
     tags = {
+      "Enviornment"                                                                                           = "terraform"
       "KubernetesCluster"                                                                                     = "cloud-fam.com"
-      "Name"                                                                                                  = "control-plane-us-east-1b.masters.cloud-fam.com"
+      "Name"                                                                                                  = "control-plane-us-east-1a-2.masters.cloud-fam.com"
+      "Owner"                                                                                                 = "r0land"
       "k8s.io/cluster-autoscaler/node-template/label/kops.k8s.io/kops-controller-pki"                         = ""
       "k8s.io/cluster-autoscaler/node-template/label/node-role.kubernetes.io/control-plane"                   = ""
       "k8s.io/cluster-autoscaler/node-template/label/node.kubernetes.io/exclude-from-external-load-balancers" = ""
       "k8s.io/role/control-plane"                                                                             = "1"
       "k8s.io/role/master"                                                                                    = "1"
-      "kops.k8s.io/instancegroup"                                                                             = "control-plane-us-east-1b"
+      "kops.k8s.io/instancegroup"                                                                             = "control-plane-us-east-1a-2"
       "kubernetes.io/cluster/cloud-fam.com"                                                                   = "owned"
     }
   }
   tag_specifications {
     resource_type = "volume"
     tags = {
+      "Enviornment"                                                                                           = "terraform"
       "KubernetesCluster"                                                                                     = "cloud-fam.com"
-      "Name"                                                                                                  = "control-plane-us-east-1b.masters.cloud-fam.com"
+      "Name"                                                                                                  = "control-plane-us-east-1a-2.masters.cloud-fam.com"
+      "Owner"                                                                                                 = "r0land"
       "k8s.io/cluster-autoscaler/node-template/label/kops.k8s.io/kops-controller-pki"                         = ""
       "k8s.io/cluster-autoscaler/node-template/label/node-role.kubernetes.io/control-plane"                   = ""
       "k8s.io/cluster-autoscaler/node-template/label/node.kubernetes.io/exclude-from-external-load-balancers" = ""
       "k8s.io/role/control-plane"                                                                             = "1"
       "k8s.io/role/master"                                                                                    = "1"
-      "kops.k8s.io/instancegroup"                                                                             = "control-plane-us-east-1b"
+      "kops.k8s.io/instancegroup"                                                                             = "control-plane-us-east-1a-2"
       "kubernetes.io/cluster/cloud-fam.com"                                                                   = "owned"
     }
   }
   tags = {
+    "Enviornment"                                                                                           = "terraform"
     "KubernetesCluster"                                                                                     = "cloud-fam.com"
-    "Name"                                                                                                  = "control-plane-us-east-1b.masters.cloud-fam.com"
+    "Name"                                                                                                  = "control-plane-us-east-1a-2.masters.cloud-fam.com"
+    "Owner"                                                                                                 = "r0land"
     "k8s.io/cluster-autoscaler/node-template/label/kops.k8s.io/kops-controller-pki"                         = ""
     "k8s.io/cluster-autoscaler/node-template/label/node-role.kubernetes.io/control-plane"                   = ""
     "k8s.io/cluster-autoscaler/node-template/label/node.kubernetes.io/exclude-from-external-load-balancers" = ""
     "k8s.io/role/control-plane"                                                                             = "1"
     "k8s.io/role/master"                                                                                    = "1"
-    "kops.k8s.io/instancegroup"                                                                             = "control-plane-us-east-1b"
+    "kops.k8s.io/instancegroup"                                                                             = "control-plane-us-east-1a-2"
     "kubernetes.io/cluster/cloud-fam.com"                                                                   = "owned"
   }
-  user_data = filebase64("${path.module}/data/aws_launch_template_control-plane-us-east-1b.masters.cloud-fam.com_user_data")
+  user_data = filebase64("${path.module}/data/aws_launch_template_control-plane-us-east-1a-2.masters.cloud-fam.com_user_data")
 }
 
-resource "aws_launch_template" "control-plane-us-east-1c-masters-cloud-fam-com" {
+resource "aws_launch_template" "control-plane-us-east-1b-1-masters-cloud-fam-com" {
   block_device_mappings {
     device_name = "/dev/sda1"
     ebs {
@@ -1084,7 +1444,7 @@ resource "aws_launch_template" "control-plane-us-east-1c-masters-cloud-fam-com" 
       encrypted             = true
       iops                  = 3000
       throughput            = 125
-      volume_size           = 64
+      volume_size           = 50
       volume_type           = "gp3"
     }
   }
@@ -1093,6 +1453,7 @@ resource "aws_launch_template" "control-plane-us-east-1c-masters-cloud-fam-com" 
   }
   image_id      = "ami-0172070f66a8ebe63"
   instance_type = "m5.large"
+  key_name      = aws_key_pair.kubernetes-cloud-fam-com-bfdd6f403e3a82ffe70a53ab37cac980.id
   lifecycle {
     create_before_destroy = true
   }
@@ -1105,7 +1466,7 @@ resource "aws_launch_template" "control-plane-us-east-1c-masters-cloud-fam-com" 
   monitoring {
     enabled = false
   }
-  name = "control-plane-us-east-1c.masters.cloud-fam.com"
+  name = "control-plane-us-east-1b-1.masters.cloud-fam.com"
   network_interfaces {
     associate_public_ip_address = false
     delete_on_termination       = true
@@ -1115,43 +1476,219 @@ resource "aws_launch_template" "control-plane-us-east-1c-masters-cloud-fam-com" 
   tag_specifications {
     resource_type = "instance"
     tags = {
+      "Enviornment"                                                                                           = "terraform"
       "KubernetesCluster"                                                                                     = "cloud-fam.com"
-      "Name"                                                                                                  = "control-plane-us-east-1c.masters.cloud-fam.com"
+      "Name"                                                                                                  = "control-plane-us-east-1b-1.masters.cloud-fam.com"
+      "Owner"                                                                                                 = "r0land"
       "k8s.io/cluster-autoscaler/node-template/label/kops.k8s.io/kops-controller-pki"                         = ""
       "k8s.io/cluster-autoscaler/node-template/label/node-role.kubernetes.io/control-plane"                   = ""
       "k8s.io/cluster-autoscaler/node-template/label/node.kubernetes.io/exclude-from-external-load-balancers" = ""
       "k8s.io/role/control-plane"                                                                             = "1"
       "k8s.io/role/master"                                                                                    = "1"
-      "kops.k8s.io/instancegroup"                                                                             = "control-plane-us-east-1c"
+      "kops.k8s.io/instancegroup"                                                                             = "control-plane-us-east-1b-1"
       "kubernetes.io/cluster/cloud-fam.com"                                                                   = "owned"
     }
   }
   tag_specifications {
     resource_type = "volume"
     tags = {
+      "Enviornment"                                                                                           = "terraform"
       "KubernetesCluster"                                                                                     = "cloud-fam.com"
-      "Name"                                                                                                  = "control-plane-us-east-1c.masters.cloud-fam.com"
+      "Name"                                                                                                  = "control-plane-us-east-1b-1.masters.cloud-fam.com"
+      "Owner"                                                                                                 = "r0land"
       "k8s.io/cluster-autoscaler/node-template/label/kops.k8s.io/kops-controller-pki"                         = ""
       "k8s.io/cluster-autoscaler/node-template/label/node-role.kubernetes.io/control-plane"                   = ""
       "k8s.io/cluster-autoscaler/node-template/label/node.kubernetes.io/exclude-from-external-load-balancers" = ""
       "k8s.io/role/control-plane"                                                                             = "1"
       "k8s.io/role/master"                                                                                    = "1"
-      "kops.k8s.io/instancegroup"                                                                             = "control-plane-us-east-1c"
+      "kops.k8s.io/instancegroup"                                                                             = "control-plane-us-east-1b-1"
       "kubernetes.io/cluster/cloud-fam.com"                                                                   = "owned"
     }
   }
   tags = {
+    "Enviornment"                                                                                           = "terraform"
     "KubernetesCluster"                                                                                     = "cloud-fam.com"
-    "Name"                                                                                                  = "control-plane-us-east-1c.masters.cloud-fam.com"
+    "Name"                                                                                                  = "control-plane-us-east-1b-1.masters.cloud-fam.com"
+    "Owner"                                                                                                 = "r0land"
     "k8s.io/cluster-autoscaler/node-template/label/kops.k8s.io/kops-controller-pki"                         = ""
     "k8s.io/cluster-autoscaler/node-template/label/node-role.kubernetes.io/control-plane"                   = ""
     "k8s.io/cluster-autoscaler/node-template/label/node.kubernetes.io/exclude-from-external-load-balancers" = ""
     "k8s.io/role/control-plane"                                                                             = "1"
     "k8s.io/role/master"                                                                                    = "1"
-    "kops.k8s.io/instancegroup"                                                                             = "control-plane-us-east-1c"
+    "kops.k8s.io/instancegroup"                                                                             = "control-plane-us-east-1b-1"
     "kubernetes.io/cluster/cloud-fam.com"                                                                   = "owned"
   }
-  user_data = filebase64("${path.module}/data/aws_launch_template_control-plane-us-east-1c.masters.cloud-fam.com_user_data")
+  user_data = filebase64("${path.module}/data/aws_launch_template_control-plane-us-east-1b-1.masters.cloud-fam.com_user_data")
+}
+
+resource "aws_launch_template" "control-plane-us-east-1b-2-masters-cloud-fam-com" {
+  block_device_mappings {
+    device_name = "/dev/sda1"
+    ebs {
+      delete_on_termination = true
+      encrypted             = true
+      iops                  = 3000
+      throughput            = 125
+      volume_size           = 50
+      volume_type           = "gp3"
+    }
+  }
+  iam_instance_profile {
+    name = aws_iam_instance_profile.masters-cloud-fam-com.id
+  }
+  image_id      = "ami-0172070f66a8ebe63"
+  instance_type = "m5.large"
+  key_name      = aws_key_pair.kubernetes-cloud-fam-com-bfdd6f403e3a82ffe70a53ab37cac980.id
+  lifecycle {
+    create_before_destroy = true
+  }
+  metadata_options {
+    http_endpoint               = "enabled"
+    http_protocol_ipv6          = "disabled"
+    http_put_response_hop_limit = 1
+    http_tokens                 = "required"
+  }
+  monitoring {
+    enabled = false
+  }
+  name = "control-plane-us-east-1b-2.masters.cloud-fam.com"
+  network_interfaces {
+    associate_public_ip_address = false
+    delete_on_termination       = true
+    ipv6_address_count          = 0
+    security_groups             = [aws_security_group.masters-cloud-fam-com.id]
+  }
+  tag_specifications {
+    resource_type = "instance"
+    tags = {
+      "Enviornment"                                                                                           = "terraform"
+      "KubernetesCluster"                                                                                     = "cloud-fam.com"
+      "Name"                                                                                                  = "control-plane-us-east-1b-2.masters.cloud-fam.com"
+      "Owner"                                                                                                 = "r0land"
+      "k8s.io/cluster-autoscaler/node-template/label/kops.k8s.io/kops-controller-pki"                         = ""
+      "k8s.io/cluster-autoscaler/node-template/label/node-role.kubernetes.io/control-plane"                   = ""
+      "k8s.io/cluster-autoscaler/node-template/label/node.kubernetes.io/exclude-from-external-load-balancers" = ""
+      "k8s.io/role/control-plane"                                                                             = "1"
+      "k8s.io/role/master"                                                                                    = "1"
+      "kops.k8s.io/instancegroup"                                                                             = "control-plane-us-east-1b-2"
+      "kubernetes.io/cluster/cloud-fam.com"                                                                   = "owned"
+    }
+  }
+  tag_specifications {
+    resource_type = "volume"
+    tags = {
+      "Enviornment"                                                                                           = "terraform"
+      "KubernetesCluster"                                                                                     = "cloud-fam.com"
+      "Name"                                                                                                  = "control-plane-us-east-1b-2.masters.cloud-fam.com"
+      "Owner"                                                                                                 = "r0land"
+      "k8s.io/cluster-autoscaler/node-template/label/kops.k8s.io/kops-controller-pki"                         = ""
+      "k8s.io/cluster-autoscaler/node-template/label/node-role.kubernetes.io/control-plane"                   = ""
+      "k8s.io/cluster-autoscaler/node-template/label/node.kubernetes.io/exclude-from-external-load-balancers" = ""
+      "k8s.io/role/control-plane"                                                                             = "1"
+      "k8s.io/role/master"                                                                                    = "1"
+      "kops.k8s.io/instancegroup"                                                                             = "control-plane-us-east-1b-2"
+      "kubernetes.io/cluster/cloud-fam.com"                                                                   = "owned"
+    }
+  }
+  tags = {
+    "Enviornment"                                                                                           = "terraform"
+    "KubernetesCluster"                                                                                     = "cloud-fam.com"
+    "Name"                                                                                                  = "control-plane-us-east-1b-2.masters.cloud-fam.com"
+    "Owner"                                                                                                 = "r0land"
+    "k8s.io/cluster-autoscaler/node-template/label/kops.k8s.io/kops-controller-pki"                         = ""
+    "k8s.io/cluster-autoscaler/node-template/label/node-role.kubernetes.io/control-plane"                   = ""
+    "k8s.io/cluster-autoscaler/node-template/label/node.kubernetes.io/exclude-from-external-load-balancers" = ""
+    "k8s.io/role/control-plane"                                                                             = "1"
+    "k8s.io/role/master"                                                                                    = "1"
+    "kops.k8s.io/instancegroup"                                                                             = "control-plane-us-east-1b-2"
+    "kubernetes.io/cluster/cloud-fam.com"                                                                   = "owned"
+  }
+  user_data = filebase64("${path.module}/data/aws_launch_template_control-plane-us-east-1b-2.masters.cloud-fam.com_user_data")
+}
+
+resource "aws_launch_template" "control-plane-us-east-1c-1-masters-cloud-fam-com" {
+  block_device_mappings {
+    device_name = "/dev/sda1"
+    ebs {
+      delete_on_termination = true
+      encrypted             = true
+      iops                  = 3000
+      throughput            = 125
+      volume_size           = 50
+      volume_type           = "gp3"
+    }
+  }
+  iam_instance_profile {
+    name = aws_iam_instance_profile.masters-cloud-fam-com.id
+  }
+  image_id      = "ami-0172070f66a8ebe63"
+  instance_type = "m5.large"
+  key_name      = aws_key_pair.kubernetes-cloud-fam-com-bfdd6f403e3a82ffe70a53ab37cac980.id
+  lifecycle {
+    create_before_destroy = true
+  }
+  metadata_options {
+    http_endpoint               = "enabled"
+    http_protocol_ipv6          = "disabled"
+    http_put_response_hop_limit = 1
+    http_tokens                 = "required"
+  }
+  monitoring {
+    enabled = false
+  }
+  name = "control-plane-us-east-1c-1.masters.cloud-fam.com"
+  network_interfaces {
+    associate_public_ip_address = false
+    delete_on_termination       = true
+    ipv6_address_count          = 0
+    security_groups             = [aws_security_group.masters-cloud-fam-com.id]
+  }
+  tag_specifications {
+    resource_type = "instance"
+    tags = {
+      "Enviornment"                                                                                           = "terraform"
+      "KubernetesCluster"                                                                                     = "cloud-fam.com"
+      "Name"                                                                                                  = "control-plane-us-east-1c-1.masters.cloud-fam.com"
+      "Owner"                                                                                                 = "r0land"
+      "k8s.io/cluster-autoscaler/node-template/label/kops.k8s.io/kops-controller-pki"                         = ""
+      "k8s.io/cluster-autoscaler/node-template/label/node-role.kubernetes.io/control-plane"                   = ""
+      "k8s.io/cluster-autoscaler/node-template/label/node.kubernetes.io/exclude-from-external-load-balancers" = ""
+      "k8s.io/role/control-plane"                                                                             = "1"
+      "k8s.io/role/master"                                                                                    = "1"
+      "kops.k8s.io/instancegroup"                                                                             = "control-plane-us-east-1c-1"
+      "kubernetes.io/cluster/cloud-fam.com"                                                                   = "owned"
+    }
+  }
+  tag_specifications {
+    resource_type = "volume"
+    tags = {
+      "Enviornment"                                                                                           = "terraform"
+      "KubernetesCluster"                                                                                     = "cloud-fam.com"
+      "Name"                                                                                                  = "control-plane-us-east-1c-1.masters.cloud-fam.com"
+      "Owner"                                                                                                 = "r0land"
+      "k8s.io/cluster-autoscaler/node-template/label/kops.k8s.io/kops-controller-pki"                         = ""
+      "k8s.io/cluster-autoscaler/node-template/label/node-role.kubernetes.io/control-plane"                   = ""
+      "k8s.io/cluster-autoscaler/node-template/label/node.kubernetes.io/exclude-from-external-load-balancers" = ""
+      "k8s.io/role/control-plane"                                                                             = "1"
+      "k8s.io/role/master"                                                                                    = "1"
+      "kops.k8s.io/instancegroup"                                                                             = "control-plane-us-east-1c-1"
+      "kubernetes.io/cluster/cloud-fam.com"                                                                   = "owned"
+    }
+  }
+  tags = {
+    "Enviornment"                                                                                           = "terraform"
+    "KubernetesCluster"                                                                                     = "cloud-fam.com"
+    "Name"                                                                                                  = "control-plane-us-east-1c-1.masters.cloud-fam.com"
+    "Owner"                                                                                                 = "r0land"
+    "k8s.io/cluster-autoscaler/node-template/label/kops.k8s.io/kops-controller-pki"                         = ""
+    "k8s.io/cluster-autoscaler/node-template/label/node-role.kubernetes.io/control-plane"                   = ""
+    "k8s.io/cluster-autoscaler/node-template/label/node.kubernetes.io/exclude-from-external-load-balancers" = ""
+    "k8s.io/role/control-plane"                                                                             = "1"
+    "k8s.io/role/master"                                                                                    = "1"
+    "kops.k8s.io/instancegroup"                                                                             = "control-plane-us-east-1c-1"
+    "kubernetes.io/cluster/cloud-fam.com"                                                                   = "owned"
+  }
+  user_data = filebase64("${path.module}/data/aws_launch_template_control-plane-us-east-1c-1.masters.cloud-fam.com_user_data")
 }
 
 resource "aws_launch_template" "nodes-us-east-1a-cloud-fam-com" {
@@ -1171,6 +1708,7 @@ resource "aws_launch_template" "nodes-us-east-1a-cloud-fam-com" {
   }
   image_id      = "ami-0172070f66a8ebe63"
   instance_type = "m5.large"
+  key_name      = aws_key_pair.kubernetes-cloud-fam-com-bfdd6f403e3a82ffe70a53ab37cac980.id
   lifecycle {
     create_before_destroy = true
   }
@@ -1193,8 +1731,10 @@ resource "aws_launch_template" "nodes-us-east-1a-cloud-fam-com" {
   tag_specifications {
     resource_type = "instance"
     tags = {
+      "Enviornment"                                                                = "terraform"
       "KubernetesCluster"                                                          = "cloud-fam.com"
       "Name"                                                                       = "nodes-us-east-1a.cloud-fam.com"
+      "Owner"                                                                      = "r0land"
       "k8s.io/cluster-autoscaler/node-template/label/node-role.kubernetes.io/node" = ""
       "k8s.io/role/node"                                                           = "1"
       "kops.k8s.io/instancegroup"                                                  = "nodes-us-east-1a"
@@ -1204,8 +1744,10 @@ resource "aws_launch_template" "nodes-us-east-1a-cloud-fam-com" {
   tag_specifications {
     resource_type = "volume"
     tags = {
+      "Enviornment"                                                                = "terraform"
       "KubernetesCluster"                                                          = "cloud-fam.com"
       "Name"                                                                       = "nodes-us-east-1a.cloud-fam.com"
+      "Owner"                                                                      = "r0land"
       "k8s.io/cluster-autoscaler/node-template/label/node-role.kubernetes.io/node" = ""
       "k8s.io/role/node"                                                           = "1"
       "kops.k8s.io/instancegroup"                                                  = "nodes-us-east-1a"
@@ -1213,8 +1755,10 @@ resource "aws_launch_template" "nodes-us-east-1a-cloud-fam-com" {
     }
   }
   tags = {
+    "Enviornment"                                                                = "terraform"
     "KubernetesCluster"                                                          = "cloud-fam.com"
     "Name"                                                                       = "nodes-us-east-1a.cloud-fam.com"
+    "Owner"                                                                      = "r0land"
     "k8s.io/cluster-autoscaler/node-template/label/node-role.kubernetes.io/node" = ""
     "k8s.io/role/node"                                                           = "1"
     "kops.k8s.io/instancegroup"                                                  = "nodes-us-east-1a"
@@ -1240,6 +1784,7 @@ resource "aws_launch_template" "nodes-us-east-1b-cloud-fam-com" {
   }
   image_id      = "ami-0172070f66a8ebe63"
   instance_type = "m5.large"
+  key_name      = aws_key_pair.kubernetes-cloud-fam-com-bfdd6f403e3a82ffe70a53ab37cac980.id
   lifecycle {
     create_before_destroy = true
   }
@@ -1262,8 +1807,10 @@ resource "aws_launch_template" "nodes-us-east-1b-cloud-fam-com" {
   tag_specifications {
     resource_type = "instance"
     tags = {
+      "Enviornment"                                                                = "terraform"
       "KubernetesCluster"                                                          = "cloud-fam.com"
       "Name"                                                                       = "nodes-us-east-1b.cloud-fam.com"
+      "Owner"                                                                      = "r0land"
       "k8s.io/cluster-autoscaler/node-template/label/node-role.kubernetes.io/node" = ""
       "k8s.io/role/node"                                                           = "1"
       "kops.k8s.io/instancegroup"                                                  = "nodes-us-east-1b"
@@ -1273,8 +1820,10 @@ resource "aws_launch_template" "nodes-us-east-1b-cloud-fam-com" {
   tag_specifications {
     resource_type = "volume"
     tags = {
+      "Enviornment"                                                                = "terraform"
       "KubernetesCluster"                                                          = "cloud-fam.com"
       "Name"                                                                       = "nodes-us-east-1b.cloud-fam.com"
+      "Owner"                                                                      = "r0land"
       "k8s.io/cluster-autoscaler/node-template/label/node-role.kubernetes.io/node" = ""
       "k8s.io/role/node"                                                           = "1"
       "kops.k8s.io/instancegroup"                                                  = "nodes-us-east-1b"
@@ -1282,8 +1831,10 @@ resource "aws_launch_template" "nodes-us-east-1b-cloud-fam-com" {
     }
   }
   tags = {
+    "Enviornment"                                                                = "terraform"
     "KubernetesCluster"                                                          = "cloud-fam.com"
     "Name"                                                                       = "nodes-us-east-1b.cloud-fam.com"
+    "Owner"                                                                      = "r0land"
     "k8s.io/cluster-autoscaler/node-template/label/node-role.kubernetes.io/node" = ""
     "k8s.io/role/node"                                                           = "1"
     "kops.k8s.io/instancegroup"                                                  = "nodes-us-east-1b"
@@ -1309,6 +1860,7 @@ resource "aws_launch_template" "nodes-us-east-1c-cloud-fam-com" {
   }
   image_id      = "ami-0172070f66a8ebe63"
   instance_type = "m5.large"
+  key_name      = aws_key_pair.kubernetes-cloud-fam-com-bfdd6f403e3a82ffe70a53ab37cac980.id
   lifecycle {
     create_before_destroy = true
   }
@@ -1331,8 +1883,10 @@ resource "aws_launch_template" "nodes-us-east-1c-cloud-fam-com" {
   tag_specifications {
     resource_type = "instance"
     tags = {
+      "Enviornment"                                                                = "terraform"
       "KubernetesCluster"                                                          = "cloud-fam.com"
       "Name"                                                                       = "nodes-us-east-1c.cloud-fam.com"
+      "Owner"                                                                      = "r0land"
       "k8s.io/cluster-autoscaler/node-template/label/node-role.kubernetes.io/node" = ""
       "k8s.io/role/node"                                                           = "1"
       "kops.k8s.io/instancegroup"                                                  = "nodes-us-east-1c"
@@ -1342,8 +1896,10 @@ resource "aws_launch_template" "nodes-us-east-1c-cloud-fam-com" {
   tag_specifications {
     resource_type = "volume"
     tags = {
+      "Enviornment"                                                                = "terraform"
       "KubernetesCluster"                                                          = "cloud-fam.com"
       "Name"                                                                       = "nodes-us-east-1c.cloud-fam.com"
+      "Owner"                                                                      = "r0land"
       "k8s.io/cluster-autoscaler/node-template/label/node-role.kubernetes.io/node" = ""
       "k8s.io/role/node"                                                           = "1"
       "kops.k8s.io/instancegroup"                                                  = "nodes-us-east-1c"
@@ -1351,8 +1907,10 @@ resource "aws_launch_template" "nodes-us-east-1c-cloud-fam-com" {
     }
   }
   tags = {
+    "Enviornment"                                                                = "terraform"
     "KubernetesCluster"                                                          = "cloud-fam.com"
     "Name"                                                                       = "nodes-us-east-1c.cloud-fam.com"
+    "Owner"                                                                      = "r0land"
     "k8s.io/cluster-autoscaler/node-template/label/node-role.kubernetes.io/node" = ""
     "k8s.io/role/node"                                                           = "1"
     "kops.k8s.io/instancegroup"                                                  = "nodes-us-east-1c"
@@ -1376,8 +1934,10 @@ resource "aws_lb" "api-cloud-fam-com" {
     subnet_id = aws_subnet.utility-us-east-1c-cloud-fam-com.id
   }
   tags = {
+    "Enviornment"                         = "terraform"
     "KubernetesCluster"                   = "cloud-fam.com"
     "Name"                                = "api.cloud-fam.com"
+    "Owner"                               = "r0land"
     "kubernetes.io/cluster/cloud-fam.com" = "owned"
   }
 }
@@ -1397,8 +1957,10 @@ resource "aws_lb" "bastion-cloud-fam-com" {
     subnet_id = aws_subnet.utility-us-east-1c-cloud-fam-com.id
   }
   tags = {
+    "Enviornment"                         = "terraform"
     "KubernetesCluster"                   = "cloud-fam.com"
     "Name"                                = "bastion.cloud-fam.com"
+    "Owner"                               = "r0land"
     "kubernetes.io/cluster/cloud-fam.com" = "owned"
   }
 }
@@ -1436,8 +1998,10 @@ resource "aws_lb_target_group" "bastion-cloud-fam-com-amg3a8" {
   port     = 22
   protocol = "TCP"
   tags = {
+    "Enviornment"                         = "terraform"
     "KubernetesCluster"                   = "cloud-fam.com"
     "Name"                                = "bastion-cloud-fam-com-amg3a8"
+    "Owner"                               = "r0land"
     "kubernetes.io/cluster/cloud-fam.com" = "owned"
   }
   vpc_id = aws_vpc.cloud-fam-com.id
@@ -1456,8 +2020,10 @@ resource "aws_lb_target_group" "tcp-cloud-fam-com-qk3bcf" {
   port     = 443
   protocol = "TCP"
   tags = {
+    "Enviornment"                         = "terraform"
     "KubernetesCluster"                   = "cloud-fam.com"
     "Name"                                = "tcp-cloud-fam-com-qk3bcf"
+    "Owner"                               = "r0land"
     "kubernetes.io/cluster/cloud-fam.com" = "owned"
   }
   vpc_id = aws_vpc.cloud-fam-com.id
@@ -1467,8 +2033,10 @@ resource "aws_nat_gateway" "us-east-1a-cloud-fam-com" {
   allocation_id = aws_eip.us-east-1a-cloud-fam-com.id
   subnet_id     = aws_subnet.utility-us-east-1a-cloud-fam-com.id
   tags = {
+    "Enviornment"                         = "terraform"
     "KubernetesCluster"                   = "cloud-fam.com"
     "Name"                                = "us-east-1a.cloud-fam.com"
+    "Owner"                               = "r0land"
     "kubernetes.io/cluster/cloud-fam.com" = "owned"
   }
 }
@@ -1477,8 +2045,10 @@ resource "aws_nat_gateway" "us-east-1b-cloud-fam-com" {
   allocation_id = aws_eip.us-east-1b-cloud-fam-com.id
   subnet_id     = aws_subnet.utility-us-east-1b-cloud-fam-com.id
   tags = {
+    "Enviornment"                         = "terraform"
     "KubernetesCluster"                   = "cloud-fam.com"
     "Name"                                = "us-east-1b.cloud-fam.com"
+    "Owner"                               = "r0land"
     "kubernetes.io/cluster/cloud-fam.com" = "owned"
   }
 }
@@ -1487,8 +2057,10 @@ resource "aws_nat_gateway" "us-east-1c-cloud-fam-com" {
   allocation_id = aws_eip.us-east-1c-cloud-fam-com.id
   subnet_id     = aws_subnet.utility-us-east-1c-cloud-fam-com.id
   tags = {
+    "Enviornment"                         = "terraform"
     "KubernetesCluster"                   = "cloud-fam.com"
     "Name"                                = "us-east-1c.cloud-fam.com"
+    "Owner"                               = "r0land"
     "kubernetes.io/cluster/cloud-fam.com" = "owned"
   }
 }
@@ -1547,8 +2119,10 @@ resource "aws_route53_record" "bastion-cloud-fam-com" {
 
 resource "aws_route_table" "cloud-fam-com" {
   tags = {
+    "Enviornment"                         = "terraform"
     "KubernetesCluster"                   = "cloud-fam.com"
     "Name"                                = "cloud-fam.com"
+    "Owner"                               = "r0land"
     "kubernetes.io/cluster/cloud-fam.com" = "owned"
     "kubernetes.io/kops/role"             = "public"
   }
@@ -1557,8 +2131,10 @@ resource "aws_route_table" "cloud-fam-com" {
 
 resource "aws_route_table" "private-us-east-1a-cloud-fam-com" {
   tags = {
+    "Enviornment"                         = "terraform"
     "KubernetesCluster"                   = "cloud-fam.com"
     "Name"                                = "private-us-east-1a.cloud-fam.com"
+    "Owner"                               = "r0land"
     "kubernetes.io/cluster/cloud-fam.com" = "owned"
     "kubernetes.io/kops/role"             = "private-us-east-1a"
   }
@@ -1567,8 +2143,10 @@ resource "aws_route_table" "private-us-east-1a-cloud-fam-com" {
 
 resource "aws_route_table" "private-us-east-1b-cloud-fam-com" {
   tags = {
+    "Enviornment"                         = "terraform"
     "KubernetesCluster"                   = "cloud-fam.com"
     "Name"                                = "private-us-east-1b.cloud-fam.com"
+    "Owner"                               = "r0land"
     "kubernetes.io/cluster/cloud-fam.com" = "owned"
     "kubernetes.io/kops/role"             = "private-us-east-1b"
   }
@@ -1577,8 +2155,10 @@ resource "aws_route_table" "private-us-east-1b-cloud-fam-com" {
 
 resource "aws_route_table" "private-us-east-1c-cloud-fam-com" {
   tags = {
+    "Enviornment"                         = "terraform"
     "KubernetesCluster"                   = "cloud-fam.com"
     "Name"                                = "private-us-east-1c.cloud-fam.com"
+    "Owner"                               = "r0land"
     "kubernetes.io/cluster/cloud-fam.com" = "owned"
     "kubernetes.io/kops/role"             = "private-us-east-1c"
   }
@@ -1671,10 +2251,10 @@ resource "aws_s3_object" "cloud-fam-com-addons-limit-range-addons-k8s-io" {
   provider = aws.files
 }
 
-resource "aws_s3_object" "cloud-fam-com-addons-networking-amazon-vpc-routed-eni-k8s-1-16" {
+resource "aws_s3_object" "cloud-fam-com-addons-networking-projectcalico-org-k8s-1-25" {
   bucket   = "tf-state-kops-stage"
-  content  = file("${path.module}/data/aws_s3_object_cloud-fam.com-addons-networking.amazon-vpc-routed-eni-k8s-1.16_content")
-  key      = "cloud-fam.com/addons/networking.amazon-vpc-routed-eni/k8s-1.16.yaml"
+  content  = file("${path.module}/data/aws_s3_object_cloud-fam.com-addons-networking.projectcalico.org-k8s-1.25_content")
+  key      = "cloud-fam.com/addons/networking.projectcalico.org/k8s-1.25.yaml"
   provider = aws.files
 }
 
@@ -1729,45 +2309,73 @@ resource "aws_s3_object" "kops-version-txt" {
   provider = aws.files
 }
 
-resource "aws_s3_object" "manifests-etcdmanager-events-control-plane-us-east-1a" {
+resource "aws_s3_object" "manifests-etcdmanager-events-control-plane-us-east-1a-1" {
   bucket   = "tf-state-kops-stage"
-  content  = file("${path.module}/data/aws_s3_object_manifests-etcdmanager-events-control-plane-us-east-1a_content")
-  key      = "cloud-fam.com/manifests/etcd/events-control-plane-us-east-1a.yaml"
+  content  = file("${path.module}/data/aws_s3_object_manifests-etcdmanager-events-control-plane-us-east-1a-1_content")
+  key      = "cloud-fam.com/manifests/etcd/events-control-plane-us-east-1a-1.yaml"
   provider = aws.files
 }
 
-resource "aws_s3_object" "manifests-etcdmanager-events-control-plane-us-east-1b" {
+resource "aws_s3_object" "manifests-etcdmanager-events-control-plane-us-east-1a-2" {
   bucket   = "tf-state-kops-stage"
-  content  = file("${path.module}/data/aws_s3_object_manifests-etcdmanager-events-control-plane-us-east-1b_content")
-  key      = "cloud-fam.com/manifests/etcd/events-control-plane-us-east-1b.yaml"
+  content  = file("${path.module}/data/aws_s3_object_manifests-etcdmanager-events-control-plane-us-east-1a-2_content")
+  key      = "cloud-fam.com/manifests/etcd/events-control-plane-us-east-1a-2.yaml"
   provider = aws.files
 }
 
-resource "aws_s3_object" "manifests-etcdmanager-events-control-plane-us-east-1c" {
+resource "aws_s3_object" "manifests-etcdmanager-events-control-plane-us-east-1b-1" {
   bucket   = "tf-state-kops-stage"
-  content  = file("${path.module}/data/aws_s3_object_manifests-etcdmanager-events-control-plane-us-east-1c_content")
-  key      = "cloud-fam.com/manifests/etcd/events-control-plane-us-east-1c.yaml"
+  content  = file("${path.module}/data/aws_s3_object_manifests-etcdmanager-events-control-plane-us-east-1b-1_content")
+  key      = "cloud-fam.com/manifests/etcd/events-control-plane-us-east-1b-1.yaml"
   provider = aws.files
 }
 
-resource "aws_s3_object" "manifests-etcdmanager-main-control-plane-us-east-1a" {
+resource "aws_s3_object" "manifests-etcdmanager-events-control-plane-us-east-1b-2" {
   bucket   = "tf-state-kops-stage"
-  content  = file("${path.module}/data/aws_s3_object_manifests-etcdmanager-main-control-plane-us-east-1a_content")
-  key      = "cloud-fam.com/manifests/etcd/main-control-plane-us-east-1a.yaml"
+  content  = file("${path.module}/data/aws_s3_object_manifests-etcdmanager-events-control-plane-us-east-1b-2_content")
+  key      = "cloud-fam.com/manifests/etcd/events-control-plane-us-east-1b-2.yaml"
   provider = aws.files
 }
 
-resource "aws_s3_object" "manifests-etcdmanager-main-control-plane-us-east-1b" {
+resource "aws_s3_object" "manifests-etcdmanager-events-control-plane-us-east-1c-1" {
   bucket   = "tf-state-kops-stage"
-  content  = file("${path.module}/data/aws_s3_object_manifests-etcdmanager-main-control-plane-us-east-1b_content")
-  key      = "cloud-fam.com/manifests/etcd/main-control-plane-us-east-1b.yaml"
+  content  = file("${path.module}/data/aws_s3_object_manifests-etcdmanager-events-control-plane-us-east-1c-1_content")
+  key      = "cloud-fam.com/manifests/etcd/events-control-plane-us-east-1c-1.yaml"
   provider = aws.files
 }
 
-resource "aws_s3_object" "manifests-etcdmanager-main-control-plane-us-east-1c" {
+resource "aws_s3_object" "manifests-etcdmanager-main-control-plane-us-east-1a-1" {
   bucket   = "tf-state-kops-stage"
-  content  = file("${path.module}/data/aws_s3_object_manifests-etcdmanager-main-control-plane-us-east-1c_content")
-  key      = "cloud-fam.com/manifests/etcd/main-control-plane-us-east-1c.yaml"
+  content  = file("${path.module}/data/aws_s3_object_manifests-etcdmanager-main-control-plane-us-east-1a-1_content")
+  key      = "cloud-fam.com/manifests/etcd/main-control-plane-us-east-1a-1.yaml"
+  provider = aws.files
+}
+
+resource "aws_s3_object" "manifests-etcdmanager-main-control-plane-us-east-1a-2" {
+  bucket   = "tf-state-kops-stage"
+  content  = file("${path.module}/data/aws_s3_object_manifests-etcdmanager-main-control-plane-us-east-1a-2_content")
+  key      = "cloud-fam.com/manifests/etcd/main-control-plane-us-east-1a-2.yaml"
+  provider = aws.files
+}
+
+resource "aws_s3_object" "manifests-etcdmanager-main-control-plane-us-east-1b-1" {
+  bucket   = "tf-state-kops-stage"
+  content  = file("${path.module}/data/aws_s3_object_manifests-etcdmanager-main-control-plane-us-east-1b-1_content")
+  key      = "cloud-fam.com/manifests/etcd/main-control-plane-us-east-1b-1.yaml"
+  provider = aws.files
+}
+
+resource "aws_s3_object" "manifests-etcdmanager-main-control-plane-us-east-1b-2" {
+  bucket   = "tf-state-kops-stage"
+  content  = file("${path.module}/data/aws_s3_object_manifests-etcdmanager-main-control-plane-us-east-1b-2_content")
+  key      = "cloud-fam.com/manifests/etcd/main-control-plane-us-east-1b-2.yaml"
+  provider = aws.files
+}
+
+resource "aws_s3_object" "manifests-etcdmanager-main-control-plane-us-east-1c-1" {
+  bucket   = "tf-state-kops-stage"
+  content  = file("${path.module}/data/aws_s3_object_manifests-etcdmanager-main-control-plane-us-east-1c-1_content")
+  key      = "cloud-fam.com/manifests/etcd/main-control-plane-us-east-1c-1.yaml"
   provider = aws.files
 }
 
@@ -1778,24 +2386,38 @@ resource "aws_s3_object" "manifests-static-kube-apiserver-healthcheck" {
   provider = aws.files
 }
 
-resource "aws_s3_object" "nodeupconfig-control-plane-us-east-1a" {
+resource "aws_s3_object" "nodeupconfig-control-plane-us-east-1a-1" {
   bucket   = "tf-state-kops-stage"
-  content  = file("${path.module}/data/aws_s3_object_nodeupconfig-control-plane-us-east-1a_content")
-  key      = "cloud-fam.com/igconfig/control-plane/control-plane-us-east-1a/nodeupconfig.yaml"
+  content  = file("${path.module}/data/aws_s3_object_nodeupconfig-control-plane-us-east-1a-1_content")
+  key      = "cloud-fam.com/igconfig/control-plane/control-plane-us-east-1a-1/nodeupconfig.yaml"
   provider = aws.files
 }
 
-resource "aws_s3_object" "nodeupconfig-control-plane-us-east-1b" {
+resource "aws_s3_object" "nodeupconfig-control-plane-us-east-1a-2" {
   bucket   = "tf-state-kops-stage"
-  content  = file("${path.module}/data/aws_s3_object_nodeupconfig-control-plane-us-east-1b_content")
-  key      = "cloud-fam.com/igconfig/control-plane/control-plane-us-east-1b/nodeupconfig.yaml"
+  content  = file("${path.module}/data/aws_s3_object_nodeupconfig-control-plane-us-east-1a-2_content")
+  key      = "cloud-fam.com/igconfig/control-plane/control-plane-us-east-1a-2/nodeupconfig.yaml"
   provider = aws.files
 }
 
-resource "aws_s3_object" "nodeupconfig-control-plane-us-east-1c" {
+resource "aws_s3_object" "nodeupconfig-control-plane-us-east-1b-1" {
   bucket   = "tf-state-kops-stage"
-  content  = file("${path.module}/data/aws_s3_object_nodeupconfig-control-plane-us-east-1c_content")
-  key      = "cloud-fam.com/igconfig/control-plane/control-plane-us-east-1c/nodeupconfig.yaml"
+  content  = file("${path.module}/data/aws_s3_object_nodeupconfig-control-plane-us-east-1b-1_content")
+  key      = "cloud-fam.com/igconfig/control-plane/control-plane-us-east-1b-1/nodeupconfig.yaml"
+  provider = aws.files
+}
+
+resource "aws_s3_object" "nodeupconfig-control-plane-us-east-1b-2" {
+  bucket   = "tf-state-kops-stage"
+  content  = file("${path.module}/data/aws_s3_object_nodeupconfig-control-plane-us-east-1b-2_content")
+  key      = "cloud-fam.com/igconfig/control-plane/control-plane-us-east-1b-2/nodeupconfig.yaml"
+  provider = aws.files
+}
+
+resource "aws_s3_object" "nodeupconfig-control-plane-us-east-1c-1" {
+  bucket   = "tf-state-kops-stage"
+  content  = file("${path.module}/data/aws_s3_object_nodeupconfig-control-plane-us-east-1c-1_content")
+  key      = "cloud-fam.com/igconfig/control-plane/control-plane-us-east-1c-1/nodeupconfig.yaml"
   provider = aws.files
 }
 
@@ -1824,8 +2446,10 @@ resource "aws_security_group" "api-elb-cloud-fam-com" {
   description = "Security group for api ELB"
   name        = "api-elb.cloud-fam.com"
   tags = {
+    "Enviornment"                         = "terraform"
     "KubernetesCluster"                   = "cloud-fam.com"
     "Name"                                = "api-elb.cloud-fam.com"
+    "Owner"                               = "r0land"
     "kubernetes.io/cluster/cloud-fam.com" = "owned"
   }
   vpc_id = aws_vpc.cloud-fam-com.id
@@ -1835,8 +2459,10 @@ resource "aws_security_group" "bastion-cloud-fam-com" {
   description = "Security group for bastion"
   name        = "bastion.cloud-fam.com"
   tags = {
+    "Enviornment"                         = "terraform"
     "KubernetesCluster"                   = "cloud-fam.com"
     "Name"                                = "bastion.cloud-fam.com"
+    "Owner"                               = "r0land"
     "kubernetes.io/cluster/cloud-fam.com" = "owned"
   }
   vpc_id = aws_vpc.cloud-fam-com.id
@@ -1846,8 +2472,10 @@ resource "aws_security_group" "masters-cloud-fam-com" {
   description = "Security group for masters"
   name        = "masters.cloud-fam.com"
   tags = {
+    "Enviornment"                         = "terraform"
     "KubernetesCluster"                   = "cloud-fam.com"
     "Name"                                = "masters.cloud-fam.com"
+    "Owner"                               = "r0land"
     "kubernetes.io/cluster/cloud-fam.com" = "owned"
   }
   vpc_id = aws_vpc.cloud-fam-com.id
@@ -1857,8 +2485,10 @@ resource "aws_security_group" "nodes-cloud-fam-com" {
   description = "Security group for nodes"
   name        = "nodes.cloud-fam.com"
   tags = {
+    "Enviornment"                         = "terraform"
     "KubernetesCluster"                   = "cloud-fam.com"
     "Name"                                = "nodes.cloud-fam.com"
+    "Owner"                               = "r0land"
     "kubernetes.io/cluster/cloud-fam.com" = "owned"
   }
   vpc_id = aws_vpc.cloud-fam-com.id
@@ -2017,12 +2647,12 @@ resource "aws_security_group_rule" "from-nodes-cloud-fam-com-egress-all-0to0-__-
   type              = "egress"
 }
 
-resource "aws_security_group_rule" "from-nodes-cloud-fam-com-ingress-all-0to0-masters-cloud-fam-com" {
+resource "aws_security_group_rule" "from-nodes-cloud-fam-com-ingress-4-0to0-masters-cloud-fam-com" {
   from_port                = 0
-  protocol                 = "-1"
+  protocol                 = "4"
   security_group_id        = aws_security_group.masters-cloud-fam-com.id
   source_security_group_id = aws_security_group.nodes-cloud-fam-com.id
-  to_port                  = 0
+  to_port                  = 65535
   type                     = "ingress"
 }
 
@@ -2149,14 +2779,17 @@ resource "aws_subnet" "us-east-1a-cloud-fam-com" {
   enable_resource_name_dns_a_record_on_launch = true
   private_dns_hostname_type_on_launch         = "resource-name"
   tags = {
-    "KubernetesCluster"                                   = "cloud-fam.com"
-    "Name"                                                = "us-east-1a.cloud-fam.com"
-    "SubnetType"                                          = "Private"
-    "kops.k8s.io/instance-group/bastions"                 = "true"
-    "kops.k8s.io/instance-group/control-plane-us-east-1a" = "true"
-    "kops.k8s.io/instance-group/nodes-us-east-1a"         = "true"
-    "kubernetes.io/cluster/cloud-fam.com"                 = "owned"
-    "kubernetes.io/role/internal-elb"                     = "1"
+    "Enviornment"                                           = "terraform"
+    "KubernetesCluster"                                     = "cloud-fam.com"
+    "Name"                                                  = "us-east-1a.cloud-fam.com"
+    "Owner"                                                 = "r0land"
+    "SubnetType"                                            = "Private"
+    "kops.k8s.io/instance-group/bastions"                   = "true"
+    "kops.k8s.io/instance-group/control-plane-us-east-1a-1" = "true"
+    "kops.k8s.io/instance-group/control-plane-us-east-1a-2" = "true"
+    "kops.k8s.io/instance-group/nodes-us-east-1a"           = "true"
+    "kubernetes.io/cluster/cloud-fam.com"                   = "owned"
+    "kubernetes.io/role/internal-elb"                       = "1"
   }
   vpc_id = aws_vpc.cloud-fam-com.id
 }
@@ -2167,14 +2800,17 @@ resource "aws_subnet" "us-east-1b-cloud-fam-com" {
   enable_resource_name_dns_a_record_on_launch = true
   private_dns_hostname_type_on_launch         = "resource-name"
   tags = {
-    "KubernetesCluster"                                   = "cloud-fam.com"
-    "Name"                                                = "us-east-1b.cloud-fam.com"
-    "SubnetType"                                          = "Private"
-    "kops.k8s.io/instance-group/bastions"                 = "true"
-    "kops.k8s.io/instance-group/control-plane-us-east-1b" = "true"
-    "kops.k8s.io/instance-group/nodes-us-east-1b"         = "true"
-    "kubernetes.io/cluster/cloud-fam.com"                 = "owned"
-    "kubernetes.io/role/internal-elb"                     = "1"
+    "Enviornment"                                           = "terraform"
+    "KubernetesCluster"                                     = "cloud-fam.com"
+    "Name"                                                  = "us-east-1b.cloud-fam.com"
+    "Owner"                                                 = "r0land"
+    "SubnetType"                                            = "Private"
+    "kops.k8s.io/instance-group/bastions"                   = "true"
+    "kops.k8s.io/instance-group/control-plane-us-east-1b-1" = "true"
+    "kops.k8s.io/instance-group/control-plane-us-east-1b-2" = "true"
+    "kops.k8s.io/instance-group/nodes-us-east-1b"           = "true"
+    "kubernetes.io/cluster/cloud-fam.com"                   = "owned"
+    "kubernetes.io/role/internal-elb"                       = "1"
   }
   vpc_id = aws_vpc.cloud-fam-com.id
 }
@@ -2185,14 +2821,16 @@ resource "aws_subnet" "us-east-1c-cloud-fam-com" {
   enable_resource_name_dns_a_record_on_launch = true
   private_dns_hostname_type_on_launch         = "resource-name"
   tags = {
-    "KubernetesCluster"                                   = "cloud-fam.com"
-    "Name"                                                = "us-east-1c.cloud-fam.com"
-    "SubnetType"                                          = "Private"
-    "kops.k8s.io/instance-group/bastions"                 = "true"
-    "kops.k8s.io/instance-group/control-plane-us-east-1c" = "true"
-    "kops.k8s.io/instance-group/nodes-us-east-1c"         = "true"
-    "kubernetes.io/cluster/cloud-fam.com"                 = "owned"
-    "kubernetes.io/role/internal-elb"                     = "1"
+    "Enviornment"                                           = "terraform"
+    "KubernetesCluster"                                     = "cloud-fam.com"
+    "Name"                                                  = "us-east-1c.cloud-fam.com"
+    "Owner"                                                 = "r0land"
+    "SubnetType"                                            = "Private"
+    "kops.k8s.io/instance-group/bastions"                   = "true"
+    "kops.k8s.io/instance-group/control-plane-us-east-1c-1" = "true"
+    "kops.k8s.io/instance-group/nodes-us-east-1c"           = "true"
+    "kubernetes.io/cluster/cloud-fam.com"                   = "owned"
+    "kubernetes.io/role/internal-elb"                       = "1"
   }
   vpc_id = aws_vpc.cloud-fam-com.id
 }
@@ -2203,8 +2841,10 @@ resource "aws_subnet" "utility-us-east-1a-cloud-fam-com" {
   enable_resource_name_dns_a_record_on_launch = true
   private_dns_hostname_type_on_launch         = "resource-name"
   tags = {
+    "Enviornment"                         = "terraform"
     "KubernetesCluster"                   = "cloud-fam.com"
     "Name"                                = "utility-us-east-1a.cloud-fam.com"
+    "Owner"                               = "r0land"
     "SubnetType"                          = "Utility"
     "kubernetes.io/cluster/cloud-fam.com" = "owned"
     "kubernetes.io/role/elb"              = "1"
@@ -2218,8 +2858,10 @@ resource "aws_subnet" "utility-us-east-1b-cloud-fam-com" {
   enable_resource_name_dns_a_record_on_launch = true
   private_dns_hostname_type_on_launch         = "resource-name"
   tags = {
+    "Enviornment"                         = "terraform"
     "KubernetesCluster"                   = "cloud-fam.com"
     "Name"                                = "utility-us-east-1b.cloud-fam.com"
+    "Owner"                               = "r0land"
     "SubnetType"                          = "Utility"
     "kubernetes.io/cluster/cloud-fam.com" = "owned"
     "kubernetes.io/role/elb"              = "1"
@@ -2233,8 +2875,10 @@ resource "aws_subnet" "utility-us-east-1c-cloud-fam-com" {
   enable_resource_name_dns_a_record_on_launch = true
   private_dns_hostname_type_on_launch         = "resource-name"
   tags = {
+    "Enviornment"                         = "terraform"
     "KubernetesCluster"                   = "cloud-fam.com"
     "Name"                                = "utility-us-east-1c.cloud-fam.com"
+    "Owner"                               = "r0land"
     "SubnetType"                          = "Utility"
     "kubernetes.io/cluster/cloud-fam.com" = "owned"
     "kubernetes.io/role/elb"              = "1"
@@ -2248,8 +2892,10 @@ resource "aws_vpc" "cloud-fam-com" {
   enable_dns_hostnames             = true
   enable_dns_support               = true
   tags = {
+    "Enviornment"                         = "terraform"
     "KubernetesCluster"                   = "cloud-fam.com"
     "Name"                                = "cloud-fam.com"
+    "Owner"                               = "r0land"
     "kubernetes.io/cluster/cloud-fam.com" = "owned"
   }
 }
@@ -2258,8 +2904,10 @@ resource "aws_vpc_dhcp_options" "cloud-fam-com" {
   domain_name         = "ec2.internal"
   domain_name_servers = ["AmazonProvidedDNS"]
   tags = {
+    "Enviornment"                         = "terraform"
     "KubernetesCluster"                   = "cloud-fam.com"
     "Name"                                = "cloud-fam.com"
+    "Owner"                               = "r0land"
     "kubernetes.io/cluster/cloud-fam.com" = "owned"
   }
 }
